@@ -1,13 +1,9 @@
 pub(crate) fn extract_next_digits(s: &str) -> (&str, &str) {
-    let digits_end = s
-    .char_indices()
-    .find_map(|(idx, c)| if c.is_ascii_digit() {None} else {Some(idx)})
-    .unwrap_or_else(|| s.len());
-    
+    extract_until(|c| c.is_ascii_digit(), s)
+}
 
-    let digits = &s[..digits_end];
-    let remainder = &s[digits_end..];
-    (digits, remainder)
+pub(crate) fn extract_whitespace(s: &str) -> (&str, &str) {
+    extract_until(|c| c == ' ', s)
 }
 
 pub(crate) fn extract_operator(s: &str) -> (&str, &str) {
@@ -16,9 +12,20 @@ pub(crate) fn extract_operator(s: &str) -> (&str, &str) {
         _ => panic!("bad operator"),
     }
 
-    (&s[0..1], extract_next_digits(&s[1..]).0)
+    (&s[0..1].trim(), &s[1..].trim())
 }
 
+fn extract_until(accept_char: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
+    let extracted_end = s
+        .char_indices()
+        .find_map(|(idx, c)| if accept_char(c) { None } else { Some(idx) })
+        .unwrap_or_else(|| s.len());
+
+    let extracted = &s[..extracted_end];
+    let rest = &s[extracted_end..];
+
+    (extracted.trim(), rest.trim())
+}
 
 #[cfg(test)]
 mod tests {
@@ -44,7 +51,6 @@ mod tests {
     fn extract_single_digitr() {
         assert_eq!(extract_next_digits("100"), ("100", ""));
     }
-
 
     #[test]
     fn extract_plus() {
