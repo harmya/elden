@@ -1,3 +1,5 @@
+use utils::{extract_next_digits, extract_op};
+
 pub mod utils;
 
 #[derive(Debug, PartialEq)]
@@ -40,15 +42,11 @@ pub struct Expression {
 
 impl Expression {
     pub fn new(s: &str) -> Self {
-        let operator_pos = s.find(|c: char| "+-*/%".contains(c))
-                                                          .expect("Illegal Expression");
-
-        let (first_part, rest) = s.split_at(operator_pos);
-
-        let first_operand = Number::new(first_part);
-        let operator = Op::new(&rest[..1]);
-        let second_operand = Number::new(&rest[1..]);
-
+        let (first_operand, rest) = extract_next_digits(s);
+        let first_operand = Number::new(first_operand);
+        let (operator, second_operand) =extract_op(rest);
+        let operator = Op::new(operator);
+        let second_operand = Number::new(second_operand);
         Self {first_operand, second_operand, operator}
     }
 }
