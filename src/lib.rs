@@ -1,3 +1,5 @@
+pub mod utils;
+
 #[derive(Debug, PartialEq)]
 pub struct Number(pub i32);
 impl Number {
@@ -26,6 +28,27 @@ impl Op {
             _ => panic!("Illegal Operator")
 
         }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Expression {
+    pub first_operand: Number,
+    pub second_operand: Number, 
+    pub operator: Op
+}
+
+impl Expression {
+    pub fn new(s: &str) -> Self {
+        if s.len() != 3 {
+            panic!("Illegal Expression");
+        }
+        
+        let first_operand = Number::new(&s[..1]);
+        let operator = Op::new(&s[1..2]);
+        let second_operand = Number::new(&s[2..]);
+
+        Self {first_operand, second_operand, operator}
     }
 }
 
@@ -61,5 +84,16 @@ mod tests {
     #[test]
     fn parse_modulus() {
         assert_eq!(Op::new("%"), Op::Mod);
+    }
+
+    #[test]
+    fn parse_expression() {
+        assert_eq!(
+            Expression::new("1+2"), 
+            Expression {
+                first_operand: Number(1),
+                operator: Op::Add,
+                second_operand: Number(2),
+            });
     }
 }
