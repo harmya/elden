@@ -40,13 +40,14 @@ pub struct Expression {
 
 impl Expression {
     pub fn new(s: &str) -> Self {
-        if s.len() != 3 {
-            panic!("Illegal Expression");
-        }
-        
-        let first_operand = Number::new(&s[..1]);
-        let operator = Op::new(&s[1..2]);
-        let second_operand = Number::new(&s[2..]);
+        let operator_pos = s.find(|c: char| "+-*/%".contains(c))
+                                                          .expect("Illegal Expression");
+
+        let (first_part, rest) = s.split_at(operator_pos);
+
+        let first_operand = Number::new(first_part);
+        let operator = Op::new(&rest[..1]);
+        let second_operand = Number::new(&rest[1..]);
 
         Self {first_operand, second_operand, operator}
     }
@@ -87,13 +88,34 @@ mod tests {
     }
 
     #[test]
-    fn parse_expression() {
+    fn parse_expression_single_number() {
         assert_eq!(
             Expression::new("1+2"), 
             Expression {
                 first_operand: Number(1),
                 operator: Op::Add,
                 second_operand: Number(2),
+            });
+    }
+
+    #[test]
+    fn parse_expression_any_number_one() {
+        assert_eq!(
+            Expression::new("1333+2"), 
+            Expression {
+                first_operand: Number(1333),
+                operator: Op::Add,
+                second_operand: Number(2),
+            });
+    }
+    #[test]
+    fn parse_expression_any_number_two() {
+        assert_eq!(
+            Expression::new("1333+243"), 
+            Expression {
+                first_operand: Number(1333),
+                operator: Op::Add,
+                second_operand: Number(243),
             });
     }
 }
