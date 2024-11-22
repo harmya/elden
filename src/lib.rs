@@ -1,12 +1,13 @@
-use utils::{extract_next_digits, extract_op};
+use utils::{extract_next_digits, extract_operator};
 
 pub mod utils;
 
 #[derive(Debug, PartialEq)]
 pub struct Number(pub i32);
 impl Number {
-    pub fn new(s: &str) -> Self {
-        Self(s.parse().unwrap())
+    pub fn new(s: &str) -> (Self, &str) {
+        let (number, rest) = extract_next_digits(s);
+        (Self(number.parse().unwrap()), rest)
     }
 }
 
@@ -20,8 +21,9 @@ pub enum Op {
 }
 
 impl Op {
-    pub fn new(s: &str) -> Self {
-        match s {
+    pub fn new(s: &str) -> (Self, &str) {
+        let (operator, rest) = extract_operator(s);
+        let operator = match operator {
             "+" => Self::Add,
             "-" => Self::Sub,
             "*" => Self::Mul,
@@ -29,7 +31,8 @@ impl Op {
             "%" => Self::Mod,
             _ => panic!("Illegal Operator")
 
-        }
+        };
+        (operator, rest)
     }
 }
 
@@ -41,14 +44,14 @@ pub struct Expression {
 }
 
 impl Expression {
-    pub fn new(s: &str) -> Self {
-        let (first_operand, rest) = extract_next_digits(s);
-        let first_operand = Number::new(first_operand);
-        let (operator, second_operand) =extract_op(rest);
-        let operator = Op::new(operator);
-        let second_operand = Number::new(second_operand);
-        Self {first_operand, second_operand, operator}
+    pub fn new(s: &str) -> (Self, &str) {
+        let (first_operand, rest) = Number::new(s);
+        let (operator, rest) = Op::new(rest);
+        let (second_operand, rest) = Number::new(rest);
+        (Self {first_operand, second_operand, operator}, rest)
     }
+
+
 }
 
 #[cfg(test)]
@@ -57,63 +60,63 @@ mod tests {
 
     #[test]
     fn parse_number() {
-        assert_eq!(Number::new("123"), Number(123));
+        assert_eq!(Number::new("123"), (Number(123), ""));
     }
 
     #[test]
     fn parse_add() {
-        assert_eq!(Op::new("+"), Op::Add);
+        assert_eq!(Op::new("+"), (Op::Add, ""));
     }
 
     #[test]
     fn parse_subtract() {
-        assert_eq!(Op::new("-"), Op::Sub);
+        assert_eq!(Op::new("-"), (Op::Sub, ""));
     }
 
     #[test]
     fn parse_multiply() {
-        assert_eq!(Op::new("*"), Op::Mul);
+        assert_eq!(Op::new("*"), (Op::Mul, ""));
     }
 
     #[test]
     fn parse_divide() {
-        assert_eq!(Op::new("/"), Op::Div);
+        assert_eq!(Op::new("/"), (Op::Div, ""));
     }
 
     #[test]
     fn parse_modulus() {
-        assert_eq!(Op::new("%"), Op::Mod);
+        assert_eq!(Op::new("%"), (Op::Mod, ""));
     }
 
     #[test]
     fn parse_expression_single_number() {
         assert_eq!(
             Expression::new("1+2"), 
-            Expression {
+            (Expression {
                 first_operand: Number(1),
                 operator: Op::Add,
                 second_operand: Number(2),
-            });
+            }, ""));
     }
 
     #[test]
     fn parse_expression_any_number_one() {
         assert_eq!(
             Expression::new("1333+2"), 
-            Expression {
+            (Expression {
                 first_operand: Number(1333),
                 operator: Op::Add,
                 second_operand: Number(2),
-            });
+            }, ""));
     }
     #[test]
     fn parse_expression_any_number_two() {
         assert_eq!(
             Expression::new("1333+243"), 
-            Expression {
+            (Expression {
                 first_operand: Number(1333),
                 operator: Op::Add,
                 second_operand: Number(243),
-            });
+            }, ""));
     }
 }

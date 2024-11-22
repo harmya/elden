@@ -10,7 +10,7 @@ pub(crate) fn extract_next_digits(s: &str) -> (&str, &str) {
     (digits, remainder)
 }
 
-pub(crate) fn extract_op(s: &str) -> (&str, &str) {
+pub(crate) fn extract_operator(s: &str) -> (&str, &str) {
     match &s[0..1] {
         "+" | "-" | "*" | "/" | "%" => {}
         _ => panic!("bad operator"),
@@ -48,21 +48,21 @@ mod tests {
 
     #[test]
     fn extract_plus() {
-        assert_eq!(extract_op("+2"), ("+", "2"));
+        assert_eq!(extract_operator("+2"), ("+", "2"));
     }
 
     #[test]
     fn extract_minus() {
-        assert_eq!(extract_op("-10"), ("-", "10"));
+        assert_eq!(extract_operator("-10"), ("-", "10"));
     }
 
     #[test]
     fn extract_star() {
-        assert_eq!(extract_op("*3"), ("*", "3"));
+        assert_eq!(extract_operator("*3"), ("*", "3"));
     }
 
     #[test]
     fn extract_slash() {
-        assert_eq!(extract_op("/4"), ("/", "4"));
+        assert_eq!(extract_operator("/4"), ("/", "4"));
     }
 }
