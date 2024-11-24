@@ -1,4 +1,4 @@
-use utils::{extract_next_digits, extract_operator, extract_whitespace};
+use utils::{extract_next, extract_operator_and_delimiter, extract_whitespace};
 
 pub mod utils;
 
@@ -6,7 +6,7 @@ pub mod utils;
 pub struct Number(pub i32);
 impl Number {
     pub fn new(s: &str) -> (Self, &str) {
-        let (number, rest) = extract_next_digits(s.trim());
+        let (number, rest) = extract_next(s.trim());
         (Self(number.parse().unwrap()), rest)
     }
 }
@@ -30,7 +30,7 @@ pub enum Operator {
 
 impl Operator {
     pub fn new(s: &str) -> (Self, &str) {
-        let (operator, rest) = extract_operator(s.trim());
+        let (operator, rest) = extract_operator_and_delimiter(s.trim());
         let operator = match operator {
             "+" => Self::Add,
             "-" => Self::Sub,
@@ -48,6 +48,32 @@ impl Operator {
             _ => panic!("Illegal Operator: {}", operator),
         };
         (operator, rest)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Delimeter {
+    LeftParen,
+    RightParen,
+    LeftBrace,
+    RightBrace,
+    Comma,
+    Dot,
+}
+
+impl Delimeter {
+    pub fn new(s: &str) -> (Self, &str) {
+        let (delimeter, rest) = extract_operator_and_delimiter(s.trim());
+        let delimeter = match delimeter {
+            "(" => Self::LeftParen,
+            ")" => Self::RightParen,
+            "{" => Self::LeftBrace,
+            "}" => Self::RightBrace,
+            "," => Self::Comma,
+            "." => Self::Dot,
+            _ => panic!("Illegal Character: {}", delimeter),
+        };
+        (delimeter, rest)
     }
 }
 
