@@ -7,12 +7,28 @@ pub(crate) fn extract_whitespace(s: &str) -> (&str, &str) {
 }
 
 pub(crate) fn extract_operator(s: &str) -> (&str, &str) {
-    match &s[0..1] {
-        "+" | "-" | "*" | "/" | "%" => {}
-        _ => panic!("bad operator"),
+    if s.is_empty() {
+        return ("", "");
+    } else if s.len() == 1 {
+        let (op, remainder) = match &s[0..1] {
+            "+" | "-" | "*" | "/" | "%" | "!" => (&s[0..1], &s[1..]),
+            "=" => (&s[0..1], &s[1..]),
+            "<" | ">" => (&s[0..1], &s[1..]),
+            _ => panic!("bad operator"),
+        };
+        return (op.trim(), remainder.trim());
+    } else {
+        let (op, remainder) = match &s[0..2] {
+            "==" | "!=" | "<=" | ">=" => (&s[0..2], &s[2..]),
+            _ => match &s[0..1] {
+                "+" | "-" | "*" | "/" | "%" | "!" => (&s[0..1], &s[1..]),
+                "=" => (&s[0..1], &s[1..]),
+                "<" | ">" => (&s[0..1], &s[1..]),
+                _ => panic!("bad operator"),
+            },
+        };
+        return (op.trim(), remainder.trim());
     }
-
-    (&s[0..1].trim(), &s[1..].trim())
 }
 
 fn extract_until(accept_char: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
@@ -58,6 +74,11 @@ mod tests {
     }
 
     #[test]
+    fn extract_opreator_nothing() {
+        assert_eq!(extract_operator(""), ("", ""));
+    }
+
+    #[test]
     fn extract_minus() {
         assert_eq!(extract_operator("-10"), ("-", "10"));
     }
@@ -70,5 +91,49 @@ mod tests {
     #[test]
     fn extract_slash() {
         assert_eq!(extract_operator("/4"), ("/", "4"));
+    }
+    #[test]
+    fn extract_equals_equals() {
+        assert_eq!(extract_operator("==5"), ("==", "5"));
+    }
+
+    #[test]
+    fn extract_not_equals() {
+        assert_eq!(extract_operator("!=6"), ("!=", "6"));
+    }
+
+    #[test]
+    fn extract_less_than_equals() {
+        assert_eq!(extract_operator("<=7"), ("<=", "7"));
+    }
+
+    #[test]
+    fn extract_greater_than_equals() {
+        assert_eq!(extract_operator(">=8"), (">=", "8"));
+    }
+
+    #[test]
+    fn extract_exclamation() {
+        assert_eq!(extract_operator("!9"), ("!", "9"));
+    }
+
+    #[test]
+    fn extract_equals() {
+        assert_eq!(extract_operator("=10"), ("=", "10"));
+    }
+
+    #[test]
+    fn extract_less_than() {
+        assert_eq!(extract_operator("<11"), ("<", "11"));
+    }
+
+    #[test]
+    fn extract_greater_than() {
+        assert_eq!(extract_operator(">12"), (">", "12"));
+    }
+
+    #[test]
+    fn extract_percent() {
+        assert_eq!(extract_operator("%13"), ("%", "13"));
     }
 }

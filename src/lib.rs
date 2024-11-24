@@ -12,15 +12,23 @@ impl Number {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Op {
+pub enum Operator {
     Add,
     Sub,
     Mul,
     Div,
     Mod,
+    Bang,
+    BangEquals,
+    Equal,
+    EqualEqual,
+    Greater,
+    GreaterEqual,
+    Less,
+    LessEqual,
 }
 
-impl Op {
+impl Operator {
     pub fn new(s: &str) -> (Self, &str) {
         let (operator, rest) = extract_operator(s.trim());
         let operator = match operator {
@@ -29,7 +37,15 @@ impl Op {
             "*" => Self::Mul,
             "/" => Self::Div,
             "%" => Self::Mod,
-            _ => panic!("Illegal Operator"),
+            "!" => Self::Bang,
+            "!=" => Self::BangEquals,
+            "=" => Self::Equal,
+            "==" => Self::EqualEqual,
+            ">" => Self::Greater,
+            ">=" => Self::GreaterEqual,
+            "<" => Self::Less,
+            "<=" => Self::LessEqual,
+            _ => panic!("Illegal Operator: {}", operator),
         };
         (operator, rest)
     }
@@ -39,7 +55,7 @@ impl Op {
 pub struct Expression {
     pub first_operand: Number,
     pub second_operand: Number,
-    pub operator: Op,
+    pub operator: Operator,
 }
 
 impl Expression {
@@ -47,7 +63,7 @@ impl Expression {
         let (first_operand, rest) = Number::new(s.trim());
         let (_, rest) = extract_whitespace(rest);
 
-        let (operator, rest) = Op::new(rest.trim());
+        let (operator, rest) = Operator::new(rest.trim());
         let (_, rest) = extract_whitespace(rest);
 
         let (second_operand, rest) = Number::new(rest.trim());
@@ -73,27 +89,27 @@ mod tests {
 
     #[test]
     fn parse_add() {
-        assert_eq!(Op::new("+"), (Op::Add, ""));
+        assert_eq!(Operator::new("+"), (Operator::Add, ""));
     }
 
     #[test]
     fn parse_subtract() {
-        assert_eq!(Op::new("-"), (Op::Sub, ""));
+        assert_eq!(Operator::new("-"), (Operator::Sub, ""));
     }
 
     #[test]
     fn parse_multiply() {
-        assert_eq!(Op::new("*"), (Op::Mul, ""));
+        assert_eq!(Operator::new("*"), (Operator::Mul, ""));
     }
 
     #[test]
     fn parse_divide() {
-        assert_eq!(Op::new("/"), (Op::Div, ""));
+        assert_eq!(Operator::new("/"), (Operator::Div, ""));
     }
 
     #[test]
     fn parse_modulus() {
-        assert_eq!(Op::new("%"), (Op::Mod, ""));
+        assert_eq!(Operator::new("%"), (Operator::Mod, ""));
     }
 
     #[test]
@@ -103,7 +119,7 @@ mod tests {
             (
                 Expression {
                     first_operand: Number(1),
-                    operator: Op::Add,
+                    operator: Operator::Add,
                     second_operand: Number(2),
                 },
                 ""
@@ -118,7 +134,7 @@ mod tests {
             (
                 Expression {
                     first_operand: Number(1333),
-                    operator: Op::Add,
+                    operator: Operator::Add,
                     second_operand: Number(2),
                 },
                 ""
@@ -132,7 +148,7 @@ mod tests {
             (
                 Expression {
                     first_operand: Number(1333),
-                    operator: Op::Add,
+                    operator: Operator::Add,
                     second_operand: Number(243),
                 },
                 ""
@@ -146,27 +162,67 @@ mod tests {
 
     #[test]
     fn parse_add_with_whitespace() {
-        assert_eq!(Op::new("  +  "), (Op::Add, ""));
+        assert_eq!(Operator::new("  +  "), (Operator::Add, ""));
     }
 
     #[test]
     fn parse_subtract_with_whitespace() {
-        assert_eq!(Op::new("  -  "), (Op::Sub, ""));
+        assert_eq!(Operator::new("  -  "), (Operator::Sub, ""));
     }
 
     #[test]
     fn parse_multiply_with_whitespace() {
-        assert_eq!(Op::new("  *  "), (Op::Mul, ""));
+        assert_eq!(Operator::new("  *  "), (Operator::Mul, ""));
     }
 
     #[test]
     fn parse_divide_with_whitespace() {
-        assert_eq!(Op::new("  /  "), (Op::Div, ""));
+        assert_eq!(Operator::new("  /  "), (Operator::Div, ""));
     }
 
     #[test]
     fn parse_modulus_with_whitespace() {
-        assert_eq!(Op::new("  %  "), (Op::Mod, ""));
+        assert_eq!(Operator::new("  %  "), (Operator::Mod, ""));
+    }
+
+    #[test]
+    fn parse_equals_with_whitespace() {
+        assert_eq!(Operator::new("  =  "), (Operator::Equal, ""));
+    }
+
+    #[test]
+    fn parse_equals_equals_with_whitespace() {
+        assert_eq!(Operator::new("  ==  "), (Operator::EqualEqual, ""));
+    }
+
+    #[test]
+    fn parse_not_equals_with_whitespace() {
+        assert_eq!(Operator::new("  !=  "), (Operator::BangEquals, ""));
+    }
+
+    #[test]
+    fn parse_exclamation_with_whitespace() {
+        assert_eq!(Operator::new("  !  "), (Operator::Bang, ""));
+    }
+
+    #[test]
+    fn parse_greater_with_whitespace() {
+        assert_eq!(Operator::new("  >  "), (Operator::Greater, ""));
+    }
+
+    #[test]
+    fn parse_greater_equal_with_whitespace() {
+        assert_eq!(Operator::new("  >=  "), (Operator::GreaterEqual, ""));
+    }
+
+    #[test]
+    fn parse_less_with_whitespace() {
+        assert_eq!(Operator::new("  <  "), (Operator::Less, ""));
+    }
+
+    #[test]
+    fn parse_less_equal_with_whitespace() {
+        assert_eq!(Operator::new("  <=  "), (Operator::LessEqual, ""));
     }
 
     #[test]
@@ -176,7 +232,7 @@ mod tests {
             (
                 Expression {
                     first_operand: Number(1),
-                    operator: Op::Add,
+                    operator: Operator::Add,
                     second_operand: Number(2),
                 },
                 ""
@@ -191,7 +247,7 @@ mod tests {
             (
                 Expression {
                     first_operand: Number(1333),
-                    operator: Op::Add,
+                    operator: Operator::Add,
                     second_operand: Number(2),
                 },
                 ""
@@ -206,7 +262,7 @@ mod tests {
             (
                 Expression {
                     first_operand: Number(1333),
-                    operator: Op::Add,
+                    operator: Operator::Add,
                     second_operand: Number(243),
                 },
                 ""
