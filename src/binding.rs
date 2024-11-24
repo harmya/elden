@@ -1,4 +1,5 @@
 use crate::{
+    env::Env,
     expression::Expression,
     utils::{extract_next_ident, extract_whitespace, tag},
 };
@@ -27,5 +28,9 @@ impl BindingDef {
             },
             rest,
         )
+    }
+
+    pub(crate) fn eval(&self, env: &mut Env) {
+        env.store_binding(self.name.clone(), self.val.eval());
     }
 }

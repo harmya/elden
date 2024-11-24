@@ -22,6 +22,7 @@ mod tests {
     use binding::BindingDef;
     use expression::Expression;
     use operator::Operator;
+    use val::Val;
 
     use super::*;
 
@@ -228,6 +229,58 @@ mod tests {
                 },
                 ""
             ),
+        );
+    }
+
+    #[test]
+    fn eval_add() {
+        assert_eq!(
+            Expression {
+                first_operand: Number(10),
+                second_operand: Number(10),
+                operator: Operator::Add,
+            }
+            .eval(),
+            Val::Number(20),
+        );
+    }
+
+    #[test]
+    fn eval_sub() {
+        assert_eq!(
+            Expression {
+                first_operand: Number(1),
+                second_operand: Number(5),
+                operator: Operator::Sub,
+            }
+            .eval(),
+            Val::Number(-4),
+        );
+    }
+
+    #[test]
+    fn eval_mul() {
+        assert_eq!(
+            Expression {
+                first_operand: Number(5),
+                second_operand: Number(6),
+                operator: Operator::Mul,
+            }
+            .eval(),
+            Val::Number(30),
+        );
+    }
+
+    #[test]
+    fn eval_div() {
+        assert_eq!(
+            Expression {
+                first_operand: Number(200),
+                second_operand: Number(20),
+                operator: Operator::Div,
+            }
+            .eval(),
+            Val::Number(10),
         );
     }
 }

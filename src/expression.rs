@@ -1,4 +1,4 @@
-use crate::{operator::Operator, utils::extract_whitespace, Number};
+use crate::{operator::Operator, utils::extract_whitespace, val::Val, Number};
 
 #[derive(Debug, PartialEq)]
 pub struct Expression {
@@ -24,5 +24,21 @@ impl Expression {
             },
             rest,
         )
+    }
+
+    pub(crate) fn eval(&self) -> Val {
+        let Number(first_operand) = self.first_operand;
+        let Number(second_operand) = self.second_operand;
+
+        let result = match self.operator {
+            Operator::Add => first_operand + second_operand,
+            Operator::Sub => first_operand - second_operand,
+            Operator::Mul => first_operand * second_operand,
+            Operator::Div => first_operand / second_operand,
+            Operator::Mod => first_operand % second_operand,
+            _ => panic!("Illegal Operator: {:?}", self.operator),
+        };
+
+        Val::Number(result)
     }
 }
