@@ -1,4 +1,4 @@
-use crate::utils::extract_operator_and_delimiter;
+use crate::utils::{self, extract_operator_and_delimiter, tag};
 
 #[derive(Debug, PartialEq)]
 pub enum Operator {
@@ -18,25 +18,21 @@ pub enum Operator {
 }
 
 impl Operator {
-    pub fn new(s: &str) -> (Self, &str) {
-        let (operator, rest) = extract_operator_and_delimiter(s.trim());
-        let operator = match operator {
-            "+" => Self::Add,
-            "-" => Self::Sub,
-            "*" => Self::Mul,
-            "/" => Self::Div,
-            "%" => Self::Mod,
-            "!" => Self::Bang,
-            "!=" => Self::BangEquals,
-            "=" => Self::Equal,
-            "==" => Self::EqualEqual,
-            ">" => Self::Greater,
-            ">=" => Self::GreaterEqual,
-            "<" => Self::Less,
-            "<=" => Self::LessEqual,
-            _ => panic!("Illegal Operator: {}", operator),
-        };
-        (operator, rest)
+    pub fn new(s: &str) -> Result<(Self, &str), String> {
+        tag("+", s)
+            .map(|s| (Self::Add, s))
+            .or_else(|_| tag("-", s).map(|s| (Self::Sub, s)))
+            .or_else(|_| tag("*", s).map(|s| (Self::Mul, s)))
+            .or_else(|_| tag("/", s).map(|s| (Self::Div, s)))
+            .or_else(|_| tag("%", s).map(|s| (Self::Mod, s)))
+            .or_else(|_| tag("!", s).map(|s| (Self::Bang, s)))
+            .or_else(|_| tag("!=", s).map(|s| (Self::BangEquals, s)))
+            .or_else(|_| tag("==", s).map(|s| (Self::EqualEqual, s)))
+            .or_else(|_| tag("=", s).map(|s| (Self::Equal, s)))
+            .or_else(|_| tag(">", s).map(|s| (Self::Greater, s)))
+            .or_else(|_| tag(">=", s).map(|s| (Self::GreaterEqual, s)))
+            .or_else(|_| tag("<", s).map(|s| (Self::Less, s)))
+            .or_else(|_| tag("<=", s).map(|s| (Self::LessEqual, s)))
     }
 }
 
