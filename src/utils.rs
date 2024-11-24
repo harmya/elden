@@ -1,5 +1,22 @@
-pub(crate) fn extract_next(s: &str) -> (&str, &str) {
+pub(crate) fn extract_next_digit(s: &str) -> (&str, &str) {
     extract_until(|c| c.is_ascii_digit(), s)
+}
+
+pub(crate) fn extract_next_ident(s: &str) -> (&str, &str) {
+    let s = s.trim();
+    if s.chars().next().map_or(false, |c| c.is_ascii_alphabetic()) {
+        extract_until(|c| c.is_ascii_alphanumeric() || c == '_', s)
+    } else {
+        ("", s.trim())
+    }
+}
+
+pub(crate) fn tag<'a, 'b>(starting_text: &'a str, s: &'b str) -> &'b str {
+    if s.starts_with(starting_text) {
+        &s[starting_text.len()..]
+    } else {
+        panic!("expected {}", starting_text);
+    }
 }
 
 pub(crate) fn extract_whitespace(s: &str) -> (&str, &str) {
@@ -49,29 +66,29 @@ fn extract_until(accept_char: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
 
 #[cfg(test)]
 mod tests {
-    use crate::Delimeter;
+    use crate::operator::Delimeter;
 
     use super::*;
 
     #[test]
     fn extract_one_digit() {
-        assert_eq!(extract_next("1+2"), ("1", "+2"));
+        assert_eq!(extract_next_digit("1+2"), ("1", "+2"));
     }
 
     #[test]
     fn extract_multiple_digits() {
-        assert_eq!(extract_next("10-20"), ("10", "-20"));
+        assert_eq!(extract_next_digit("10-20"), ("10", "-20"));
     }
 
     /* Some edge case testing */
     #[test]
     fn extract_nothing_from_empty_input() {
-        assert_eq!(extract_next(""), ("", ""));
+        assert_eq!(extract_next_digit(""), ("", ""));
     }
 
     #[test]
     fn extract_single_digitr() {
-        assert_eq!(extract_next("100"), ("100", ""));
+        assert_eq!(extract_next_digit("100"), ("100", ""));
     }
 
     #[test]
@@ -174,5 +191,29 @@ mod tests {
     #[test]
     fn extract_dot() {
         assert_eq!(Delimeter::new(" .1"), (Delimeter::Dot, "1"));
+    }
+
+    #[test]
+    fn extract_alphanumeric_ident() {
+        assert_eq!(extract_next_ident("diya = 20"), ("diya", "= 20"));
+    }
+
+    #[test]
+    fn extract_alphanumeric_ident_with_whitespace() {
+        assert_eq!(extract_next_ident("  mikail   = 20"), ("mikail", "= 20"));
+    }
+
+    #[test]
+    fn extract_alphanumeric_ident_with_number() {
+        assert_eq!(extract_next_ident("saad10 = 20"), ("saad10", "= 20"));
+    }
+
+    #[test]
+    fn extract_alphanumeric_ident_with_number_and_whitespace() {
+        assert_eq!(extract_next_ident("  saad10   = 20"), ("saad10", "= 20"));
+    }
+    #[test]
+    fn tag_word() {
+        assert_eq!(tag("let", "let a"), " a");
     }
 }

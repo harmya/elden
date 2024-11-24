@@ -1,111 +1,28 @@
-use utils::{extract_next, extract_operator_and_delimiter, extract_whitespace};
+use utils::extract_next_digit;
 
-pub mod utils;
+mod env;
+mod utils;
+
+pub mod binding;
+pub mod expression;
+pub mod operator;
+pub mod val;
 
 #[derive(Debug, PartialEq)]
 pub struct Number(pub i32);
 impl Number {
     pub fn new(s: &str) -> (Self, &str) {
-        let (number, rest) = extract_next(s.trim());
+        let (number, rest) = extract_next_digit(s.trim());
         (Self(number.parse().unwrap()), rest)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Operator {
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Mod,
-    Bang,
-    BangEquals,
-    Equal,
-    EqualEqual,
-    Greater,
-    GreaterEqual,
-    Less,
-    LessEqual,
-}
-
-impl Operator {
-    pub fn new(s: &str) -> (Self, &str) {
-        let (operator, rest) = extract_operator_and_delimiter(s.trim());
-        let operator = match operator {
-            "+" => Self::Add,
-            "-" => Self::Sub,
-            "*" => Self::Mul,
-            "/" => Self::Div,
-            "%" => Self::Mod,
-            "!" => Self::Bang,
-            "!=" => Self::BangEquals,
-            "=" => Self::Equal,
-            "==" => Self::EqualEqual,
-            ">" => Self::Greater,
-            ">=" => Self::GreaterEqual,
-            "<" => Self::Less,
-            "<=" => Self::LessEqual,
-            _ => panic!("Illegal Operator: {}", operator),
-        };
-        (operator, rest)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Delimeter {
-    LeftParen,
-    RightParen,
-    LeftBrace,
-    RightBrace,
-    Comma,
-    Dot,
-}
-
-impl Delimeter {
-    pub fn new(s: &str) -> (Self, &str) {
-        let (delimeter, rest) = extract_operator_and_delimiter(s.trim());
-        let delimeter = match delimeter {
-            "(" => Self::LeftParen,
-            ")" => Self::RightParen,
-            "{" => Self::LeftBrace,
-            "}" => Self::RightBrace,
-            "," => Self::Comma,
-            "." => Self::Dot,
-            _ => panic!("Illegal Character: {}", delimeter),
-        };
-        (delimeter, rest)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Expression {
-    pub first_operand: Number,
-    pub second_operand: Number,
-    pub operator: Operator,
-}
-
-impl Expression {
-    pub fn new(s: &str) -> (Self, &str) {
-        let (first_operand, rest) = Number::new(s.trim());
-        let (_, rest) = extract_whitespace(rest);
-
-        let (operator, rest) = Operator::new(rest.trim());
-        let (_, rest) = extract_whitespace(rest);
-
-        let (second_operand, rest) = Number::new(rest.trim());
-        (
-            Self {
-                first_operand,
-                second_operand,
-                operator,
-            },
-            rest,
-        )
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use binding::BindingDef;
+    use expression::Expression;
+    use operator::Operator;
+
     use super::*;
 
     #[test]
@@ -293,6 +210,24 @@ mod tests {
                 },
                 ""
             )
+        );
+    }
+
+    #[test]
+    fn parse_binding_def() {
+        assert_eq!(
+            BindingDef::new("let a = 10 / 2"),
+            (
+                BindingDef {
+                    name: "a".to_string(),
+                    val: Expression {
+                        first_operand: Number(10),
+                        operator: Operator::Div,
+                        second_operand: Number(2),
+                    }
+                },
+                ""
+            ),
         );
     }
 }
