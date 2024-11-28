@@ -15,7 +15,7 @@ pub enum Keyword {
 }
 
 impl Keyword {
-    pub fn new(s: &str) -> (Self, &str) {
+    pub fn new(s: &str) -> Result<(Self, &str), String> {
         let (keyword, rest) = extract_next_ident(s.trim());
         let keyword = match keyword {
             "main" => Self::Main,
@@ -28,9 +28,9 @@ impl Keyword {
             "let" => Self::Let,
             "return" => Self::Return,
             "print" => Self::Print,
-            _ => panic!("Unrecognized Symbol: {}", keyword),
+            _ => return Err(format!("Unrecognized Symbol: {}", keyword)),
         };
-        (keyword, rest)
+        Ok((keyword, rest))
     }
 
     pub fn tag(s: &str) -> bool {
@@ -56,57 +56,58 @@ mod tests {
 
     #[test]
     fn parse_main_keyword() {
-        assert_eq!(Keyword::new("main()"), (Keyword::Main, "()"));
+        assert_eq!(Keyword::new("main()"), Ok((Keyword::Main, "()")));
     }
 
     #[test]
     fn parse_if_keyword() {
-        assert_eq!(Keyword::new("if"), (Keyword::If, ""));
+        assert_eq!(Keyword::new("if"), Ok((Keyword::If, "")));
     }
 
     #[test]
     fn parse_else_keyword() {
-        assert_eq!(Keyword::new("else"), (Keyword::Else, ""));
+        assert_eq!(Keyword::new("else"), Ok((Keyword::Else, "")));
     }
 
     #[test]
     fn parse_true_keyword() {
-        assert_eq!(Keyword::new("true"), (Keyword::True, ""));
+        assert_eq!(Keyword::new("true"), Ok((Keyword::True, "")));
     }
 
     #[test]
     fn parse_false_keyword() {
-        assert_eq!(Keyword::new("false"), (Keyword::False, ""));
+        assert_eq!(Keyword::new("false"), Ok((Keyword::False, "")));
     }
 
     #[test]
     fn parse_for_keyword() {
-        assert_eq!(Keyword::new("for"), (Keyword::For, ""));
+        assert_eq!(Keyword::new("for"), Ok((Keyword::For, "")));
     }
 
     #[test]
     fn parse_while_keyword() {
-        assert_eq!(Keyword::new("while"), (Keyword::While, ""));
+        assert_eq!(Keyword::new("while"), Ok((Keyword::While, "")));
     }
 
     #[test]
     fn parse_let_keyword() {
-        assert_eq!(Keyword::new("let"), (Keyword::Let, ""));
+        assert_eq!(Keyword::new("let"), Ok((Keyword::Let, "")));
     }
 
     #[test]
     fn parse_return_keyword() {
-        assert_eq!(Keyword::new("return"), (Keyword::Return, ""));
+        assert_eq!(Keyword::new("return"), Ok((Keyword::Return, "")));
     }
 
     #[test]
     fn parse_print_keyword() {
-        assert_eq!(Keyword::new("print"), (Keyword::Print, ""));
+        assert_eq!(Keyword::new("print"), Ok((Keyword::Print, "")));
     }
 
     #[test]
     #[should_panic(expected = "Unrecognized Symbol: invalid")]
     fn parse_unrecognized_keyword() {
-        Keyword::new("invalid");
+        let err = Keyword::new("invalid").unwrap_err();
+        panic!("{}", err);
     }
 }

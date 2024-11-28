@@ -1,3 +1,6 @@
+use delimeter::Delimeter;
+use token::Token;
+
 mod env;
 mod utils;
 
@@ -8,3 +11,29 @@ pub mod keyword;
 pub mod operator;
 pub mod token;
 pub mod types;
+
+pub fn run_lexer(input: &str) -> Result<(Vec<Token>, &str), String> {
+    let mut remaining = input.trim();
+    let mut tokens = Vec::new();
+
+    while !remaining.is_empty() {
+        match Token::new(remaining) {
+            Ok((token, rest)) if token == Token::Delimter(Delimeter::DoubleQuote) => {
+                let (value, rest) = match Delimeter::process_literal(rest) {
+                    Ok(result) => result,
+                    Err(err) => return Err(err),
+                };
+
+                tokens.push(Token::Literal(types::Type::String(value.to_string())));
+                remaining = rest.trim();
+            }
+            Ok((token, rest)) => {
+                tokens.push(token);
+                remaining = rest.trim();
+            }
+            Err(err) => return Err(err),
+        }
+    }
+
+    Ok((tokens, remaining))
+}

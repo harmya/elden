@@ -1,13 +1,25 @@
 pub(crate) fn extract_next_digit(s: &str) -> (&str, &str) {
-    extract_until(|c| c.is_ascii_digit(), s)
+    extract_until(|c| c.is_ascii_digit(), s, false)
 }
 
 pub(crate) fn extract_next_ident(s: &str) -> (&str, &str) {
     let s = s.trim();
     if s.chars().next().map_or(false, |c| c.is_ascii_alphabetic()) {
-        extract_until(|c| c.is_ascii_alphanumeric() || c == '_', s)
+        extract_until(|c| c.is_ascii_alphanumeric() || c == '_', s, false)
     } else {
         ("", s.trim())
+    }
+}
+
+pub(crate) fn extract_next_literal(s: &str) -> (&str, &str) {
+    let s = s.trim();
+    if s.chars()
+        .next()
+        .map_or(false, |c| (c.is_ascii_alphabetic() || c == ' '))
+    {
+        extract_until(|c| c.is_ascii_alphanumeric() || c == ' ', s, true)
+    } else {
+        ("", s)
     }
 }
 
@@ -20,7 +32,7 @@ pub(crate) fn tag<'a, 'b>(starting_text: &'a str, s: &'b str) -> Result<&'b str,
 }
 
 pub(crate) fn extract_whitespace(s: &str) -> (&str, &str) {
-    extract_until(|c| c == ' ', s)
+    extract_until(|c| c == ' ', s, false)
 }
 
 pub(crate) fn extract_operator_and_delimiter(s: &str) -> Result<(&str, &str), String> {
@@ -38,7 +50,7 @@ pub(crate) fn extract_operator_and_delimiter(s: &str) -> Result<(&str, &str), St
     }
 }
 
-fn extract_until(accept_char: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
+fn extract_until(accept_char: impl Fn(char) -> bool, s: &str, is_literal: bool) -> (&str, &str) {
     let extracted_end = s
         .char_indices()
         .find_map(|(idx, c)| if accept_char(c) { None } else { Some(idx) })
@@ -47,7 +59,11 @@ fn extract_until(accept_char: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
     let extracted = &s[..extracted_end];
     let rest = &s[extracted_end..];
 
-    (extracted.trim(), rest.trim())
+    if is_literal {
+        (extracted, rest.trim())
+    } else {
+        (extracted.trim(), rest.trim())
+    }
 }
 
 #[cfg(test)]
@@ -150,23 +166,23 @@ mod tests {
     fn extract_left_paren() {
         assert_eq!(
             Delimeter::new("  (4 + 4)"),
-            (Delimeter::LeftParen, "4 + 4)")
+            Ok((Delimeter::LeftParen, "4 + 4)"))
         );
     }
 
     #[test]
     fn extract_right_paren() {
-        assert_eq!(Delimeter::new("  )"), (Delimeter::RightParen, ""));
+        assert_eq!(Delimeter::new("  )"), Ok((Delimeter::RightParen, "")));
     }
 
     #[test]
     fn extract_left_brace() {
-        assert_eq!(Delimeter::new(" {"), (Delimeter::LeftBrace, ""));
+        assert_eq!(Delimeter::new(" {"), Ok((Delimeter::LeftBrace, "")));
     }
 
     #[test]
     fn extract_right_brace() {
-        assert_eq!(Delimeter::new(" }"), (Delimeter::RightBrace, ""));
+        assert_eq!(Delimeter::new(" }"), Ok((Delimeter::RightBrace, "")));
     }
 
     #[test]

@@ -1,6 +1,6 @@
 use std::{env, fs};
 
-use elden::binding::BindingDef;
+use elden::run_lexer;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -16,7 +16,8 @@ fn main() {
 fn run_program(program_file: &str) {
     let contents =
         fs::read_to_string(program_file).expect("Should have been able to read the file");
-    let (exp, _) = BindingDef::new(&contents).expect("Nuh uh");
+    let (tokens, rest) = run_lexer(&contents).unwrap();
 
-    println!("{:?}", exp);
+    println!("{:?}", tokens);
+    println!("{}", rest);
 }
