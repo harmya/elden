@@ -70,7 +70,7 @@ mod tests {
             expression,
             Expression {
                 operands: vec![Type::Number(1333), Type::Number(2)],
-                operators: vec![Operator::Arithmetic(ArithmeticOperator::Add)],
+                operators: vec![Operator::Add],
             }
         );
         assert_eq!(remaining, "");
@@ -83,7 +83,7 @@ mod tests {
             expression,
             Expression {
                 operands: vec![Type::Number(1), Type::Number(2)],
-                operators: vec![Operator::Arithmetic(ArithmeticOperator::Add)],
+                operators: vec![Operator::Add],
             }
         );
         assert_eq!(remaining, "");
@@ -101,11 +101,7 @@ mod tests {
                     Type::Number(5),
                     Type::Boolean(true),
                 ],
-                operators: vec![
-                    Operator::Arithmetic(ArithmeticOperator::Add),
-                    Operator::Relational(RelationalOperator::Less),
-                    Operator::Logical(LogicalOperator::And),
-                ],
+                operators: vec![Operator::Add, Operator::Less, Operator::And,],
             }
         );
         assert_eq!(remaining, "");
