@@ -1,46 +1,13 @@
 use crate::{operator::*, types::Type, utils::extract_whitespace};
 
 #[derive(Debug, PartialEq)]
-pub enum ExpressionType {
-    Arithmetic,
-    Relational,
-    Logical,
-    Empty,
-}
-
-#[derive(Debug, PartialEq)]
 pub struct Expression {
     pub operands: Vec<Type>,
     pub operators: Vec<Operator>,
-    pub expression_type: ExpressionType,
 }
 
 impl Expression {
-    fn validate_expression_type(
-        operator: &Operator,
-        prev_expression_type: ExpressionType,
-    ) -> ExpressionType {
-        let current_expression_type = match operator {
-            Operator::Arithmetic(_) => ExpressionType::Arithmetic,
-            Operator::Relational(_) => ExpressionType::Relational,
-            Operator::Logical(_) => ExpressionType::Logical,
-            _ => panic!("Illegal use of operator"),
-        };
-
-        if prev_expression_type == ExpressionType::Empty {
-            return current_expression_type;
-        } else if current_expression_type == prev_expression_type {
-            prev_expression_type
-        } else {
-            panic!(
-                "Mismatched operator type: expected {:?}, found {:?}",
-                prev_expression_type, current_expression_type
-            );
-        }
-    }
-
     pub fn new(s: &str) -> Result<(Self, &str), String> {
-        let mut expression_type: ExpressionType = ExpressionType::Empty;
         let mut operands = Vec::new();
         let mut operators = Vec::new();
         let mut remaining = s.trim();
@@ -49,7 +16,7 @@ impl Expression {
             let (operand, rest) = match Type::new(remaining) {
                 Ok(res) => res,
                 Err(e) => {
-                    return Err(format!("Error parsing operand: {}", e));
+                    return Err(format!("{}", e));
                 }
             };
             operands.push(operand);
@@ -57,6 +24,7 @@ impl Expression {
             let (_, rest) = extract_whitespace(rest);
 
             if rest.is_empty() {
+                remaining = rest.trim();
                 break;
             }
 
@@ -67,24 +35,19 @@ impl Expression {
                 }
             };
 
-            expression_type = Self::validate_expression_type(&operator, expression_type);
             operators.push(operator);
 
             remaining = rest.trim();
         }
 
-        println!("{:?}", operands);
-        println!("{:?}", operators);
-
         if operands.len() <= operators.len() {
-            panic!("Invalid expression: '{}'", s);
+            return Err(format!("Invalid expression: '{}'", s));
         }
 
         Ok((
             Self {
                 operands,
                 operators,
-                expression_type,
             },
             remaining,
         ))
@@ -92,5 +55,80 @@ impl Expression {
 
     pub fn eval(&self) -> Type {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::expression::*;
+    use crate::types::Type;
+
+    #[test]
+    fn parse_simple_arithmetic_expression() {
+        let (expression, remaining) = Expression::new("1333+2").unwrap();
+        assert_eq!(
+            expression,
+            Expression {
+                operands: vec![Type::Number(1333), Type::Number(2)],
+                operators: vec![Operator::Arithmetic(ArithmeticOperator::Add)],
+            }
+        );
+        assert_eq!(remaining, "");
+    }
+
+    #[test]
+    fn parse_arithmetic_expression_with_whitespace() {
+        let (expression, remaining) = Expression::new(" 1  +  2 ").unwrap();
+        assert_eq!(
+            expression,
+            Expression {
+                operands: vec![Type::Number(1), Type::Number(2)],
+                operators: vec![Operator::Arithmetic(ArithmeticOperator::Add)],
+            }
+        );
+        assert_eq!(remaining, "");
+    }
+
+    #[test]
+    fn parse_mixed_expression() {
+        let (expression, remaining) = Expression::new("1 + 2 < 5 && true").unwrap();
+        assert_eq!(
+            expression,
+            Expression {
+                operands: vec![
+                    Type::Number(1),
+                    Type::Number(2),
+                    Type::Number(5),
+                    Type::Boolean(true),
+                ],
+                operators: vec![
+                    Operator::Arithmetic(ArithmeticOperator::Add),
+                    Operator::Relational(RelationalOperator::Less),
+                    Operator::Logical(LogicalOperator::And),
+                ],
+            }
+        );
+        assert_eq!(remaining, "");
+    }
+
+    #[test]
+    fn parse_invalid_operator_expression() {
+        let result = Expression::new("1 + @ 3");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Unexpected token: @ 3");
+    }
+
+    #[test]
+    fn parse_invalid_expression_with_extra_operator() {
+        let result = Expression::new("+ 2");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Unexpected token: + 2");
+    }
+
+    #[test]
+    fn parse_expression_with_missing_operand() {
+        let result = Expression::new("1 + ");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Invalid expression: '1 + '");
     }
 }

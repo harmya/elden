@@ -25,7 +25,7 @@ impl Type {
         if let Ok((number, rest)) = Self::parse_number(trimmed) {
             return Ok((Self::Number(number), rest));
         } else {
-            return Err(format!("Invalid input: {}", s));
+            return Err(format!("Unexpected token: {}", s));
         }
     }
 
