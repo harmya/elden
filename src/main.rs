@@ -1,4 +1,4 @@
-use std::{env, fs};
+use std::{env, error, fs};
 
 use elden::expression::Expression;
 
@@ -16,7 +16,7 @@ fn main() {
 fn run_program(program_file: &str) {
     let contents =
         fs::read_to_string(program_file).expect("Should have been able to read the file");
-    let (exp, _) = Expression::new(&contents);
+    let (exp, _) = Expression::new(&contents).expect("Nuh uh");
 
     println!("{:?}", exp);
 }

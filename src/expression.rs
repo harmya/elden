@@ -39,16 +39,29 @@ impl Expression {
         }
     }
 
-    pub fn new(s: &str) -> (Self, &str) {
+    pub fn new(s: &str) -> Result<(Self, &str), String> {
         let mut expression_type: ExpressionType = ExpressionType::Empty;
         let mut operands = Vec::new();
         let mut operators = Vec::new();
         let mut remaining = s.trim();
 
         while !remaining.is_empty() {
-            let (operand, rest) = Type::new(remaining);
+            let (operand, rest) = match Type::new(remaining) {
+                Ok(res) => res,
+                Err(e) => {
+                    return Err(format!("Error parsing operand: {}", e));
+                }
+            };
+
             let (_, rest) = extract_whitespace(rest);
-            let (operator, rest) = Operator::new(rest.trim());
+
+            let (operator, rest) = match Operator::new(rest.trim()) {
+                Ok(res) => res,
+                Err(e) => {
+                    return Err(format!("Error parsing operator: {}", e));
+                }
+            };
+
             expression_type = Self::validate_expression_type(&operator, expression_type);
             remaining = rest.trim();
 
@@ -60,14 +73,14 @@ impl Expression {
             panic!("Invalid expression: '{}'", s);
         }
 
-        (
+        Ok((
             Self {
                 operands,
                 operators,
                 expression_type,
             },
             remaining,
-        )
+        ))
     }
 
     pub fn eval(&self) -> Type {

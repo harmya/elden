@@ -16,16 +16,16 @@ impl Number {
 }
 
 impl Type {
-    pub fn new(s: &str) -> (Self, &str) {
+    pub fn new(s: &str) -> Result<(Self, &str), String> {
         let trimmed = s.trim();
         if let Ok((boolean, rest)) = Self::parse_boolean(trimmed) {
-            return (Self::Boolean(boolean), rest);
+            return Ok((Self::Boolean(boolean), rest));
         }
 
         if let Ok((number, rest)) = Self::parse_number(trimmed) {
-            return (Self::Number(number), rest);
+            return Ok((Self::Number(number), rest));
         } else {
-            panic!("Invalid input: {}", s);
+            return Err(format!("Invalid input: {}", s));
         }
     }
 

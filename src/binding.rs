@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use crate::{
     env::Env,
     expression::Expression,
@@ -11,7 +13,7 @@ pub struct BindingDef {
 }
 
 impl BindingDef {
-    pub fn new(s: &str) -> (Self, &str) {
+    pub fn new(s: &str) -> Result<(Self, &str), String> {
         let def = tag("let", s);
         let (_, def) = extract_whitespace(def);
         let (name, rest) = extract_next_ident(def);
@@ -19,15 +21,18 @@ impl BindingDef {
         let rest = tag("=", rest);
         let (_, rest) = extract_whitespace(rest);
 
-        let (val, rest) = Expression::new(rest);
+        let (val, rest) = match Expression::new(rest) {
+            Ok(res) => res,
+            Err(err) => return Err(format!("{}", err)),
+        };
 
-        (
+        Ok((
             Self {
                 name: name.to_string(),
                 val,
             },
             rest,
-        )
+        ))
     }
 
     pub(crate) fn eval(&self, env: &mut Env) {

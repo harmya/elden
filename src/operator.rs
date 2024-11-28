@@ -40,24 +40,24 @@ pub enum AssignmentOperator {
 }
 
 impl Operator {
-    pub fn new(s: &str) -> (Self, &str) {
+    pub fn new(s: &str) -> Result<(Self, &str), String> {
         let (operator, rest) = match extract_operator_and_delimiter(s.trim()) {
             Ok((operator, rest)) => (operator, rest),
             Err(err) => panic!("{}", err),
         };
         if let Ok((arithmetic_op, rest)) = ArithmeticOperator::try_new(operator, rest) {
-            return (Self::Arithmetic(arithmetic_op), rest);
+            return Ok((Self::Arithmetic(arithmetic_op), rest));
         }
         if let Ok((relational_op, rest)) = RelationalOperator::try_new(operator, rest) {
-            return (Self::Relational(relational_op), rest);
+            return Ok((Self::Relational(relational_op), rest));
         }
         if let Ok((logical_op, rest)) = LogicalOperator::try_new(operator, rest) {
-            return (Self::Logical(logical_op), rest);
+            return Ok((Self::Logical(logical_op), rest));
         }
         if let Ok((assignment_op, rest)) = AssignmentOperator::try_new(operator, rest) {
-            return (Self::Assignment(assignment_op), rest);
+            return Ok((Self::Assignment(assignment_op), rest));
         }
-        panic!("Illegal Operator: {}", operator);
+        return Err(format!("Illegal Operator: {}", operator));
     }
 }
 
@@ -119,7 +119,7 @@ mod tests {
     fn parse_add_with_whitespace() {
         assert_eq!(
             Operator::new("  +  "),
-            (Operator::Arithmetic(ArithmeticOperator::Add), "")
+            Ok((Operator::Arithmetic(ArithmeticOperator::Add), ""))
         );
     }
 
@@ -127,7 +127,7 @@ mod tests {
     fn parse_subtract_with_whitespace() {
         assert_eq!(
             Operator::new("  -  "),
-            (Operator::Arithmetic(ArithmeticOperator::Sub), "")
+            Ok((Operator::Arithmetic(ArithmeticOperator::Sub), ""))
         );
     }
 
@@ -135,7 +135,7 @@ mod tests {
     fn parse_multiply_with_whitespace() {
         assert_eq!(
             Operator::new("  *  "),
-            (Operator::Arithmetic(ArithmeticOperator::Mul), "")
+            Ok((Operator::Arithmetic(ArithmeticOperator::Mul), ""))
         );
     }
 
@@ -143,7 +143,7 @@ mod tests {
     fn parse_divide_with_whitespace() {
         assert_eq!(
             Operator::new("  /  "),
-            (Operator::Arithmetic(ArithmeticOperator::Div), "")
+            Ok((Operator::Arithmetic(ArithmeticOperator::Div), ""))
         );
     }
 
@@ -151,7 +151,7 @@ mod tests {
     fn parse_modulus_with_whitespace() {
         assert_eq!(
             Operator::new("  %  "),
-            (Operator::Arithmetic(ArithmeticOperator::Mod), "")
+            Ok((Operator::Arithmetic(ArithmeticOperator::Mod), ""))
         );
     }
 
@@ -159,7 +159,7 @@ mod tests {
     fn parse_add_without_whitespace() {
         assert_eq!(
             Operator::new("+"),
-            (Operator::Arithmetic(ArithmeticOperator::Add), "")
+            Ok((Operator::Arithmetic(ArithmeticOperator::Add), ""))
         );
     }
 
@@ -167,7 +167,7 @@ mod tests {
     fn parse_subtract_without_whitespace() {
         assert_eq!(
             Operator::new("-"),
-            (Operator::Arithmetic(ArithmeticOperator::Sub), "")
+            Ok((Operator::Arithmetic(ArithmeticOperator::Sub), ""))
         );
     }
 
@@ -175,7 +175,7 @@ mod tests {
     fn parse_multiply_without_whitespace() {
         assert_eq!(
             Operator::new("*"),
-            (Operator::Arithmetic(ArithmeticOperator::Mul), "")
+            Ok((Operator::Arithmetic(ArithmeticOperator::Mul), ""))
         );
     }
 
@@ -183,7 +183,7 @@ mod tests {
     fn parse_divide_without_whitespace() {
         assert_eq!(
             Operator::new("/"),
-            (Operator::Arithmetic(ArithmeticOperator::Div), "")
+            Ok((Operator::Arithmetic(ArithmeticOperator::Div), ""))
         );
     }
 
@@ -191,7 +191,7 @@ mod tests {
     fn parse_modulus_without_whitespace() {
         assert_eq!(
             Operator::new("%"),
-            (Operator::Arithmetic(ArithmeticOperator::Mod), "")
+            Ok((Operator::Arithmetic(ArithmeticOperator::Mod), ""))
         );
     }
 
@@ -199,7 +199,7 @@ mod tests {
     fn parse_equals_with_whitespace() {
         assert_eq!(
             Operator::new("  =  "),
-            (Operator::Assignment(AssignmentOperator::Equal), "")
+            Ok((Operator::Assignment(AssignmentOperator::Equal), ""))
         );
     }
 
@@ -207,7 +207,7 @@ mod tests {
     fn parse_equals_without_whitespace() {
         assert_eq!(
             Operator::new("="),
-            (Operator::Assignment(AssignmentOperator::Equal), "")
+            Ok((Operator::Assignment(AssignmentOperator::Equal), ""))
         );
     }
 
@@ -215,7 +215,7 @@ mod tests {
     fn parse_equals_equals_with_whitespace() {
         assert_eq!(
             Operator::new("  ==  "),
-            (Operator::Relational(RelationalOperator::EqualEqual), "")
+            Ok((Operator::Relational(RelationalOperator::EqualEqual), ""))
         );
     }
 
@@ -223,7 +223,7 @@ mod tests {
     fn parse_not_equals_with_whitespace() {
         assert_eq!(
             Operator::new("  !=  "),
-            (Operator::Relational(RelationalOperator::BangEquals), "")
+            Ok((Operator::Relational(RelationalOperator::BangEquals), ""))
         );
     }
 
@@ -231,7 +231,7 @@ mod tests {
     fn parse_greater_with_whitespace() {
         assert_eq!(
             Operator::new("  >  "),
-            (Operator::Relational(RelationalOperator::Greater), "")
+            Ok((Operator::Relational(RelationalOperator::Greater), ""))
         );
     }
 
@@ -239,7 +239,7 @@ mod tests {
     fn parse_greater_equal_with_whitespace() {
         assert_eq!(
             Operator::new("  >=  "),
-            (Operator::Relational(RelationalOperator::GreaterEqual), "")
+            Ok((Operator::Relational(RelationalOperator::GreaterEqual), ""))
         );
     }
 
@@ -247,7 +247,7 @@ mod tests {
     fn parse_less_with_whitespace() {
         assert_eq!(
             Operator::new("  <  "),
-            (Operator::Relational(RelationalOperator::Less), "")
+            Ok((Operator::Relational(RelationalOperator::Less), ""))
         );
     }
 
@@ -255,7 +255,7 @@ mod tests {
     fn parse_less_equal_with_whitespace() {
         assert_eq!(
             Operator::new("  <=  "),
-            (Operator::Relational(RelationalOperator::LessEqual), "")
+            Ok((Operator::Relational(RelationalOperator::LessEqual), ""))
         );
     }
 
@@ -263,7 +263,7 @@ mod tests {
     fn parse_equals_equals_without_whitespace() {
         assert_eq!(
             Operator::new("=="),
-            (Operator::Relational(RelationalOperator::EqualEqual), "")
+            Ok((Operator::Relational(RelationalOperator::EqualEqual), ""))
         );
     }
 
@@ -271,7 +271,7 @@ mod tests {
     fn parse_not_equals_without_whitespace() {
         assert_eq!(
             Operator::new("!="),
-            (Operator::Relational(RelationalOperator::BangEquals), "")
+            Ok((Operator::Relational(RelationalOperator::BangEquals), ""))
         );
     }
 
@@ -279,7 +279,7 @@ mod tests {
     fn parse_greater_without_whitespace() {
         assert_eq!(
             Operator::new(">"),
-            (Operator::Relational(RelationalOperator::Greater), "")
+            Ok((Operator::Relational(RelationalOperator::Greater), ""))
         );
     }
 
@@ -287,7 +287,7 @@ mod tests {
     fn parse_greater_equal_without_whitespace() {
         assert_eq!(
             Operator::new(">="),
-            (Operator::Relational(RelationalOperator::GreaterEqual), "")
+            Ok((Operator::Relational(RelationalOperator::GreaterEqual), ""))
         );
     }
 
@@ -295,7 +295,7 @@ mod tests {
     fn parse_less_without_whitespace() {
         assert_eq!(
             Operator::new("<"),
-            (Operator::Relational(RelationalOperator::Less), "")
+            Ok((Operator::Relational(RelationalOperator::Less), ""))
         );
     }
 
@@ -303,7 +303,7 @@ mod tests {
     fn parse_less_equal_without_whitespace() {
         assert_eq!(
             Operator::new("<="),
-            (Operator::Relational(RelationalOperator::LessEqual), "")
+            Ok((Operator::Relational(RelationalOperator::LessEqual), ""))
         );
     }
 
@@ -311,7 +311,7 @@ mod tests {
     fn parse_not_with_whitespace() {
         assert_eq!(
             Operator::new("  !  "),
-            (Operator::Logical(LogicalOperator::Not), "")
+            Ok((Operator::Logical(LogicalOperator::Not), ""))
         );
     }
 
@@ -319,7 +319,7 @@ mod tests {
     fn parse_and_with_whitespace() {
         assert_eq!(
             Operator::new("  &&  "),
-            (Operator::Logical(LogicalOperator::And), "")
+            Ok((Operator::Logical(LogicalOperator::And), ""))
         );
     }
 
@@ -327,7 +327,7 @@ mod tests {
     fn parse_or_with_whitespace() {
         assert_eq!(
             Operator::new("  ||  "),
-            (Operator::Logical(LogicalOperator::Or), "")
+            Ok((Operator::Logical(LogicalOperator::Or), ""))
         );
     }
 
@@ -335,7 +335,7 @@ mod tests {
     fn parse_not_without_whitespace() {
         assert_eq!(
             Operator::new("!"),
-            (Operator::Logical(LogicalOperator::Not), "")
+            Ok((Operator::Logical(LogicalOperator::Not), ""))
         );
     }
 
@@ -343,7 +343,7 @@ mod tests {
     fn parse_and_without_whitespace() {
         assert_eq!(
             Operator::new("&&"),
-            (Operator::Logical(LogicalOperator::And), "")
+            Ok((Operator::Logical(LogicalOperator::And), ""))
         );
     }
 
@@ -351,13 +351,16 @@ mod tests {
     fn parse_or_without_whitespace() {
         assert_eq!(
             Operator::new("||"),
-            (Operator::Logical(LogicalOperator::Or), "")
+            Ok((Operator::Logical(LogicalOperator::Or), ""))
         );
     }
 
     #[test]
     #[should_panic(expected = "Illegal Operator: @")]
     fn parse_illegal_operator() {
-        Operator::new("@");
+        match Operator::new("@") {
+            Ok(res) => res,
+            Err(e) => panic!("{}", e),
+        };
     }
 }
