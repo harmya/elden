@@ -60,7 +60,7 @@ impl Expression {
 
 #[cfg(test)]
 mod tests {
-    use crate::expression::*;
+    use crate::expression::{self, *};
     use crate::types::Type;
 
     #[test]
@@ -106,6 +106,19 @@ mod tests {
                     Operator::Relational(RelationalOperator::Less),
                     Operator::Logical(LogicalOperator::And),
                 ],
+            }
+        );
+        assert_eq!(remaining, "");
+    }
+
+    #[test]
+    fn parse_expression_with_one_operand() {
+        let (expression, remaining) = Expression::new("1").unwrap();
+        assert_eq!(
+            expression,
+            Expression {
+                operands: vec![Type::Number(1),],
+                operators: vec![],
             }
         );
         assert_eq!(remaining, "");
