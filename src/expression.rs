@@ -1,17 +1,14 @@
 use crate::{operator::Operator, utils::extract_whitespace, val::Val, Number};
 
 #[derive(Debug, PartialEq)]
-pub enum Expression {
-    Number(Number),
-    Operation {
-        first_operand: Number,
-        second_operand: Number,
-        operator: Operator,
-    },
+pub struct Expression {
+    pub first_operand: Number,
+    pub second_operand: Number,
+    pub operator: Operator,
 }
 
 impl Expression {
-    pub fn new(s: &str) -> Result<(Self, &str), String> {
+    pub fn new(s: &str) -> (Self, &str) {
         let (first_operand, rest) = Number::new(s.trim());
         let (_, rest) = extract_whitespace(rest);
 
@@ -19,14 +16,14 @@ impl Expression {
         let (_, rest) = extract_whitespace(rest);
 
         let (second_operand, rest) = Number::new(rest.trim());
-        Ok((
+        (
             Self {
                 first_operand,
                 second_operand,
                 operator,
             },
             rest,
-        ))
+        )
     }
 
     pub(crate) fn eval(&self) -> Val {
