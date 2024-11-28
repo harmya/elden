@@ -60,7 +60,7 @@ impl Expression {
 
 #[cfg(test)]
 mod tests {
-    use crate::expression::{self, *};
+    use crate::expression::*;
     use crate::types::Type;
 
     #[test]

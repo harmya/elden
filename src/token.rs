@@ -31,8 +31,3 @@ impl Token {
         return Err(format!("Invalid Token {}", remaining));
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-}

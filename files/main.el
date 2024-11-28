@@ -1,3 +1,3 @@
 main() = {
-    print "hello    "
+    let x = 7;
 }
