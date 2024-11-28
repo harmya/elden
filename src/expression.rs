@@ -52,8 +52,13 @@ impl Expression {
                     return Err(format!("Error parsing operand: {}", e));
                 }
             };
+            operands.push(operand);
 
             let (_, rest) = extract_whitespace(rest);
+
+            if rest.is_empty() {
+                break;
+            }
 
             let (operator, rest) = match Operator::new(rest.trim()) {
                 Ok(res) => res,
@@ -63,11 +68,13 @@ impl Expression {
             };
 
             expression_type = Self::validate_expression_type(&operator, expression_type);
-            remaining = rest.trim();
-
-            operands.push(operand);
             operators.push(operator);
+
+            remaining = rest.trim();
         }
+
+        println!("{:?}", operands);
+        println!("{:?}", operators);
 
         if operands.len() <= operators.len() {
             panic!("Invalid expression: '{}'", s);
