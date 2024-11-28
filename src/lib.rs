@@ -1,4 +1,4 @@
-use delimeter::Delimeter;
+use delimeter::Delimiter;
 use token::Token;
 
 mod env;
@@ -18,8 +18,8 @@ pub fn run_lexer(input: &str) -> Result<(Vec<Token>, &str), String> {
 
     while !remaining.is_empty() {
         match Token::new(remaining) {
-            Ok((token, rest)) if token == Token::Delimter(Delimeter::DoubleQuote) => {
-                let (value, rest) = match Delimeter::process_literal(rest) {
+            Ok((token, rest)) if token == Token::Delimiter(Delimiter::DoubleQuote) => {
+                let (value, rest) = match Delimiter::process_literal(rest) {
                     Ok(result) => result,
                     Err(err) => return Err(err),
                 };

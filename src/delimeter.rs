@@ -1,7 +1,7 @@
 use crate::utils::{extract_next_literal, extract_operator_and_delimiter};
 
 #[derive(Debug, PartialEq)]
-pub enum Delimeter {
+pub enum Delimiter {
     LeftParen,
     RightParen,
     LeftBrace,
@@ -10,7 +10,7 @@ pub enum Delimeter {
     DoubleQuote,
 }
 
-impl Delimeter {
+impl Delimiter {
     pub fn new(s: &str) -> Result<(Self, &str), String> {
         let (delimeter, rest) = match extract_operator_and_delimiter(s.trim()) {
             Ok((delimeter, rest)) => (delimeter, rest),
@@ -35,7 +35,7 @@ impl Delimeter {
                 if ch == '"' {
                     return Ok((literal, &rest[1..]));
                 } else {
-                    return Err(format!("Expected \""));
+                    return Err(format!("Expected closing quote"));
                 }
             }
             None => return Err(format!("Reached end while parsing \"")),

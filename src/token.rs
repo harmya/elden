@@ -1,8 +1,8 @@
-use crate::{delimeter::Delimeter, keyword::Keyword, operator::Operator, types::Type};
+use crate::{delimeter::Delimiter, keyword::Keyword, operator::Operator, types::Type};
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
-    Delimter(Delimeter),
+    Delimiter(Delimiter),
     Operator(Operator),
     Literal(Type),
     Keyword(Keyword),
@@ -24,8 +24,8 @@ impl Token {
             return Ok((Token::Operator(operator), rest));
         }
 
-        if let Ok((delimeter, rest)) = Delimeter::new(remaining) {
-            return Ok((Token::Delimter(delimeter), rest));
+        if let Ok((delimeter, rest)) = Delimiter::new(remaining) {
+            return Ok((Token::Delimiter(delimeter), rest));
         }
 
         return Err(format!("Invalid Token {}", remaining));

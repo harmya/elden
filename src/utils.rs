@@ -68,7 +68,7 @@ fn extract_until(accept_char: impl Fn(char) -> bool, s: &str, is_literal: bool) 
 
 #[cfg(test)]
 mod tests {
-    use crate::delimeter::Delimeter;
+    use crate::delimeter::Delimiter;
 
     use super::*;
 
@@ -165,24 +165,24 @@ mod tests {
     #[test]
     fn extract_left_paren() {
         assert_eq!(
-            Delimeter::new("  (4 + 4)"),
-            Ok((Delimeter::LeftParen, "4 + 4)"))
+            Delimiter::new("  (4 + 4)"),
+            Ok((Delimiter::LeftParen, "4 + 4)"))
         );
     }
 
     #[test]
     fn extract_right_paren() {
-        assert_eq!(Delimeter::new("  )"), Ok((Delimeter::RightParen, "")));
+        assert_eq!(Delimiter::new("  )"), Ok((Delimiter::RightParen, "")));
     }
 
     #[test]
     fn extract_left_brace() {
-        assert_eq!(Delimeter::new(" {"), Ok((Delimeter::LeftBrace, "")));
+        assert_eq!(Delimiter::new(" {"), Ok((Delimiter::LeftBrace, "")));
     }
 
     #[test]
     fn extract_right_brace() {
-        assert_eq!(Delimeter::new(" }"), Ok((Delimeter::RightBrace, "")));
+        assert_eq!(Delimiter::new(" }"), Ok((Delimiter::RightBrace, "")));
     }
 
     #[test]
