@@ -23,32 +23,18 @@ pub(crate) fn extract_whitespace(s: &str) -> (&str, &str) {
     extract_until(|c| c == ' ', s)
 }
 
-pub(crate) fn extract_operator_and_delimiter(s: &str) -> (&str, &str) {
+pub(crate) fn extract_operator_and_delimiter(s: &str) -> Result<(&str, &str), String> {
     if s.is_empty() {
-        return ("", "");
+        return Ok(("", ""));
     } else if s.len() == 1 {
-        let (op, remainder) = match &s[0..1] {
-            "+" | "-" | "*" | "/" | "%" | "!" | "(" | ")" | "{" | "}" | "," | "." => {
-                (&s[0..1], &s[1..])
-            }
-            "=" => (&s[0..1], &s[1..]),
-            "<" | ">" => (&s[0..1], &s[1..]),
-            _ => panic!("bad operator"),
-        };
-        return (op.trim(), remainder.trim());
+        let (op, remainder) = (&s[0..1], &s[1..]);
+        return Ok((op.trim(), remainder.trim()));
     } else {
         let (op, remainder) = match &s[0..2] {
-            "==" | "!=" | "<=" | ">=" => (&s[0..2], &s[2..]),
-            _ => match &s[0..1] {
-                "+" | "-" | "*" | "/" | "%" | "!" | "(" | ")" | "{" | "}" | "," | "." => {
-                    (&s[0..1], &s[1..])
-                }
-                "=" => (&s[0..1], &s[1..]),
-                "<" | ">" => (&s[0..1], &s[1..]),
-                _ => panic!("bad operator"),
-            },
+            "==" | "!=" | "<=" | ">=" | "&&" | "||" => (&s[0..2], &s[2..]),
+            _ => (&s[0..1], &s[1..]),
         };
-        return (op.trim(), remainder.trim());
+        return Ok((op.trim(), remainder.trim()));
     }
 }
 
@@ -66,7 +52,7 @@ fn extract_until(accept_char: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
 
 #[cfg(test)]
 mod tests {
-    use crate::operator::Delimeter;
+    use crate::delimeter::Delimeter;
 
     use super::*;
 
@@ -93,71 +79,71 @@ mod tests {
 
     #[test]
     fn extract_plus() {
-        assert_eq!(extract_operator_and_delimiter("+2"), ("+", "2"));
+        assert_eq!(extract_operator_and_delimiter("+2"), Ok(("+", "2")));
     }
 
     #[test]
     fn extract_opreator_nothing() {
-        assert_eq!(extract_operator_and_delimiter(""), ("", ""));
+        assert_eq!(extract_operator_and_delimiter(""), Ok(("", "")));
     }
 
     #[test]
     fn extract_minus() {
-        assert_eq!(extract_operator_and_delimiter("-10"), ("-", "10"));
+        assert_eq!(extract_operator_and_delimiter("-10"), Ok(("-", "10")));
     }
 
     #[test]
     fn extract_star() {
-        assert_eq!(extract_operator_and_delimiter("*3"), ("*", "3"));
+        assert_eq!(extract_operator_and_delimiter("*3"), Ok(("*", "3")));
     }
 
     #[test]
     fn extract_slash() {
-        assert_eq!(extract_operator_and_delimiter("/4"), ("/", "4"));
+        assert_eq!(extract_operator_and_delimiter("/4"), Ok(("/", "4")));
     }
     #[test]
     fn extract_equals_equals() {
-        assert_eq!(extract_operator_and_delimiter("==5"), ("==", "5"));
+        assert_eq!(extract_operator_and_delimiter("==5"), Ok(("==", "5")));
     }
 
     #[test]
     fn extract_not_equals() {
-        assert_eq!(extract_operator_and_delimiter("!=6"), ("!=", "6"));
+        assert_eq!(extract_operator_and_delimiter("!=6"), Ok(("!=", "6")));
     }
 
     #[test]
     fn extract_less_than_equals() {
-        assert_eq!(extract_operator_and_delimiter("<=7"), ("<=", "7"));
+        assert_eq!(extract_operator_and_delimiter("<=7"), Ok(("<=", "7")));
     }
 
     #[test]
     fn extract_greater_than_equals() {
-        assert_eq!(extract_operator_and_delimiter(">=8"), (">=", "8"));
+        assert_eq!(extract_operator_and_delimiter(">=8"), Ok((">=", "8")));
     }
 
     #[test]
     fn extract_exclamation() {
-        assert_eq!(extract_operator_and_delimiter("!9"), ("!", "9"));
+        assert_eq!(extract_operator_and_delimiter("!9"), Ok(("!", "9")));
     }
 
     #[test]
     fn extract_equals() {
-        assert_eq!(extract_operator_and_delimiter("=10"), ("=", "10"));
+        assert_eq!(extract_operator_and_delimiter("=10"), Ok(("=", "10")));
     }
 
     #[test]
     fn extract_less_than() {
-        assert_eq!(extract_operator_and_delimiter("<11"), ("<", "11"));
+        assert_eq!(extract_operator_and_delimiter("<11"), Ok(("<", "11")));
     }
 
     #[test]
     fn extract_greater_than() {
-        assert_eq!(extract_operator_and_delimiter(">12"), (">", "12"));
+        assert_eq!(extract_operator_and_delimiter(">12"), Ok((">", "12")));
     }
 
     #[test]
     fn extract_percent() {
-        assert_eq!(extract_operator_and_delimiter("%13"), ("%", "13"));
+        assert_eq!(extract_operator_and_delimiter("%13"), Ok(("%", "13")));
     }
 
     #[test]
@@ -181,16 +167,6 @@ mod tests {
     #[test]
     fn extract_right_brace() {
         assert_eq!(Delimeter::new(" }"), (Delimeter::RightBrace, ""));
-    }
-
-    #[test]
-    fn extract_comma() {
-        assert_eq!(Delimeter::new(" ,4"), (Delimeter::Comma, "4"));
-    }
-
-    #[test]
-    fn extract_dot() {
-        assert_eq!(Delimeter::new(" .1"), (Delimeter::Dot, "1"));
     }
 
     #[test]

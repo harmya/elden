@@ -1,17 +1,22 @@
 use std::{env, fs};
 
-use elden::binding::BindingDef;
+use elden::expression::Expression;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        panic!("No file found")
+        panic!("No file found. Usage: elden [script]");
     }
 
-    let program = &args[1];
-    let contents = fs::read_to_string(program).expect("Should have been able to read the file");
-    let (exp, _) = BindingDef::new(&contents);
+    let program_file = &args[1];
+    run_program(program_file);
+}
+
+fn run_program(program_file: &str) {
+    let contents =
+        fs::read_to_string(program_file).expect("Should have been able to read the file");
+    let (exp, _) = Expression::new(&contents);
 
     println!("{:?}", exp);
 }
