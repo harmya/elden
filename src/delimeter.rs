@@ -30,8 +30,6 @@ impl Delimeter {
 
     pub fn process_literal(s: &str) -> Result<(&str, &str), String> {
         let (literal, rest) = extract_next_literal(s.trim());
-        println!("Literal: {}", literal);
-        println!("rest: {}", rest);
         match rest.chars().next() {
             Some(ch) => {
                 if ch == '"' {
