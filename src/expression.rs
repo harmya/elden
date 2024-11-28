@@ -1,208 +1,76 @@
-use crate::{operator::*, utils::extract_whitespace, val::Val, Number};
+use crate::{operator::*, types::Type, utils::extract_whitespace};
 
 #[derive(Debug, PartialEq)]
-pub enum Expression {
-    Arithmetic(ArithmeticExpression),
+pub enum ExpressionType {
+    Arithmetic,
+    Relational,
+    Logical,
+    Empty,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct ArithmeticExpression {
-    pub first_operand: Number,
-    pub second_operand: Number,
-    pub operator: Operator,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct RelationalExpression {
-    pub first_operand: Number,
-    pub second_operand: Number,
-    pub operator: Operator,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct LogicalExpression {
-    pub first_operand: bool,
-    pub second_operand: Option<bool>,
-    pub operator: Operator,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct AssignmentExpression {
-    pub variable_name: String,
-    pub value: Val,
-    pub operator: Operator,
+pub struct Expression {
+    pub operands: Vec<Type>,
+    pub operators: Vec<Operator>,
+    pub expression_type: ExpressionType,
 }
 
 impl Expression {
+    fn validate_expression_type(
+        operator: &Operator,
+        prev_expression_type: ExpressionType,
+    ) -> ExpressionType {
+        let current_expression_type = match operator {
+            Operator::Arithmetic(_) => ExpressionType::Arithmetic,
+            Operator::Relational(_) => ExpressionType::Relational,
+            Operator::Logical(_) => ExpressionType::Logical,
+            _ => panic!("Illegal use of operator"),
+        };
+
+        if prev_expression_type == ExpressionType::Empty {
+            return current_expression_type;
+        } else if current_expression_type == prev_expression_type {
+            prev_expression_type
+        } else {
+            panic!(
+                "Mismatched operator type: expected {:?}, found {:?}",
+                prev_expression_type, current_expression_type
+            );
+        }
+    }
+
     pub fn new(s: &str) -> (Self, &str) {
-        if let Ok((arithmetic_expr, rest)) = ArithmeticExpression::try_new(s) {
-            return (Self::Arithmetic(arithmetic_expr), rest);
+        let mut expression_type: ExpressionType = ExpressionType::Empty;
+        let mut operands = Vec::new();
+        let mut operators = Vec::new();
+        let mut remaining = s.trim();
+
+        while !remaining.is_empty() {
+            let (operand, rest) = Type::new(remaining);
+            let (_, rest) = extract_whitespace(rest);
+            let (operator, rest) = Operator::new(rest.trim());
+            expression_type = Self::validate_expression_type(&operator, expression_type);
+            remaining = rest.trim();
+
+            operands.push(operand);
+            operators.push(operator);
         }
 
-        panic!("Failed to parse expression: {}", s);
-    }
-
-    pub fn eval(&self) -> Val {
-        match self {
-            Expression::Arithmetic(expr) => expr.eval(),
+        if operands.len() <= operators.len() {
+            panic!("Invalid expression: '{}'", s);
         }
-    }
-}
 
-impl ArithmeticExpression {
-    pub fn try_new(s: &str) -> Result<(Self, &str), String> {
-        let (first_operand, rest) = Number::new(s.trim());
-        let (_, rest) = extract_whitespace(rest);
-
-        let (operator, rest) = Operator::new(rest.trim());
-        let (_, rest) = extract_whitespace(rest);
-
-        let (second_operand, rest) = Number::new(rest.trim());
-        Ok((
+        (
             Self {
-                first_operand,
-                second_operand,
-                operator,
+                operands,
+                operators,
+                expression_type,
             },
-            rest,
-        ))
+            remaining,
+        )
     }
 
-    pub fn eval(&self) -> Val {
-        let Number(first_operand) = self.first_operand;
-        let Number(second_operand) = self.second_operand;
-
-        let result = match &self.operator {
-            Operator::Arithmetic(op) => match op {
-                ArithmeticOperator::Add => first_operand + second_operand,
-                ArithmeticOperator::Sub => first_operand - second_operand,
-                ArithmeticOperator::Mul => first_operand * second_operand,
-                ArithmeticOperator::Div => first_operand / second_operand,
-                ArithmeticOperator::Mod => first_operand % second_operand,
-            },
-            _ => panic!("Invalid operator for ArithmeticExpression"),
-        };
-
-        Val::Number(result)
-    }
-}
-#[cfg(test)]
-mod tests {
-    use crate::expression::*;
-
-    #[test]
-    fn parse_arithmetic_expression_simple() {
-        assert_eq!(
-            ArithmeticExpression::try_new("1333+2").unwrap(),
-            (
-                ArithmeticExpression {
-                    first_operand: Number(1333),
-                    operator: Operator::Arithmetic(ArithmeticOperator::Add),
-                    second_operand: Number(2),
-                },
-                ""
-            )
-        );
-    }
-
-    #[test]
-    fn parse_arithmetic_expression_with_whitespace() {
-        assert_eq!(
-            ArithmeticExpression::try_new(" 1  +  2 ").unwrap(),
-            (
-                ArithmeticExpression {
-                    first_operand: Number(1),
-                    operator: Operator::Arithmetic(ArithmeticOperator::Add),
-                    second_operand: Number(2),
-                },
-                ""
-            )
-        );
-    }
-
-    #[test]
-    fn parse_expression_simple() {
-        assert_eq!(
-            Expression::new("1333+243"),
-            (
-                Expression::Arithmetic(ArithmeticExpression {
-                    first_operand: Number(1333),
-                    operator: Operator::Arithmetic(ArithmeticOperator::Add),
-                    second_operand: Number(243),
-                }),
-                ""
-            )
-        );
-    }
-
-    #[test]
-    fn parse_expression_with_whitespace() {
-        assert_eq!(
-            Expression::new("  1333  +  243  "),
-            (
-                Expression::Arithmetic(ArithmeticExpression {
-                    first_operand: Number(1333),
-                    operator: Operator::Arithmetic(ArithmeticOperator::Add),
-                    second_operand: Number(243),
-                }),
-                ""
-            )
-        );
-    }
-
-    #[test]
-    #[should_panic]
-    fn parse_invalid_expression() {
-        assert!(ArithmeticExpression::try_new("abc+def").is_err());
-    }
-
-    #[test]
-    fn eval_arithmetic_expression_add() {
-        let expr = ArithmeticExpression {
-            first_operand: Number(10),
-            second_operand: Number(15),
-            operator: Operator::Arithmetic(ArithmeticOperator::Add),
-        };
-        assert_eq!(expr.eval(), Val::Number(25));
-    }
-
-    #[test]
-    fn eval_arithmetic_expression_sub() {
-        let expr = ArithmeticExpression {
-            first_operand: Number(10),
-            second_operand: Number(15),
-            operator: Operator::Arithmetic(ArithmeticOperator::Sub),
-        };
-        assert_eq!(expr.eval(), Val::Number(-5));
-    }
-
-    #[test]
-    fn eval_arithmetic_expression_mul() {
-        let expr = ArithmeticExpression {
-            first_operand: Number(5),
-            second_operand: Number(6),
-            operator: Operator::Arithmetic(ArithmeticOperator::Mul),
-        };
-        assert_eq!(expr.eval(), Val::Number(30));
-    }
-
-    #[test]
-    fn eval_arithmetic_expression_div() {
-        let expr = ArithmeticExpression {
-            first_operand: Number(200),
-            second_operand: Number(20),
-            operator: Operator::Arithmetic(ArithmeticOperator::Div),
-        };
-        assert_eq!(expr.eval(), Val::Number(10));
-    }
-
-    #[test]
-    fn eval_arithmetic_expression_mod() {
-        let expr = ArithmeticExpression {
-            first_operand: Number(7),
-            second_operand: Number(3),
-            operator: Operator::Arithmetic(ArithmeticOperator::Mod),
-        };
-        assert_eq!(expr.eval(), Val::Number(1));
+    pub fn eval(&self) -> Type {
+        todo!()
     }
 }
