@@ -18,6 +18,6 @@ fn run_program(program_file: &str) {
         fs::read_to_string(program_file).expect("Should have been able to read the file");
     let (tokens, rest) = run_lexer(&contents).unwrap();
 
-    println!("{:?}", tokens);
+    println!("Tokens: {:?}", tokens);
     println!("{}", rest);
 }
