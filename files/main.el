@@ -1,7 +1,6 @@
 main() = {
-    if x == 4 {
-        print "x is equal to 4";
-    } else {
-        print "x is not equal to 4 
-    }
+    let x = 4;
+    let y = 4;
+    let z = x + y;
+    return z;
 }
