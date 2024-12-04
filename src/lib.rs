@@ -4,6 +4,7 @@ use token::Token;
 mod env;
 mod utils;
 
+pub mod binary;
 pub mod binding;
 pub mod delimeter;
 pub mod expression;
