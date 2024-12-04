@@ -1,4 +1,47 @@
-use crate::{operator::*, types::Type, utils::extract_whitespace};
+use crate::operator::Operator;
+use crate::{types::Type, utils::extract_whitespace};
+
+#[derive(Debug)]
+pub struct Binary {
+    pub left_operand: Type,
+    pub operator: Operator,
+    pub right_operand: Type,
+}
+impl Binary {
+    pub fn new(s: &str) -> Result<(Self, &str), String> {
+        let (left_operand, rest) = match Type::new(s) {
+            Ok(res) => res,
+            Err(e) => {
+                return Err(format!("{}", e));
+            }
+        };
+
+        let (_, rest) = extract_whitespace(rest);
+
+        let (operator, rest) = match Operator::new(rest) {
+            Ok(res) => res,
+            Err(e) => {
+                return Err(format!("{}", e));
+            }
+        };
+
+        let (_, rest) = extract_whitespace(rest);
+
+        let (right_operand, rest) = match Type::new(rest) {
+            Ok(res) => res,
+            Err(e) => {
+                return Err(format!("{}", e));
+            }
+        };
+
+        let binary = Binary {
+            left_operand,
+            operator,
+            right_operand,
+        };
+        return Ok((binary, rest));
+    }
+}
 
 #[derive(Debug, PartialEq)]
 pub struct Expression {
@@ -139,5 +182,56 @@ mod tests {
         let result = Expression::new("1 + ");
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "Invalid expression: '1 + '");
+    }
+
+    #[test]
+    fn test_binary_new_valid_input() {
+        let input = "5 + 3";
+        let result = Binary::new(input);
+        assert!(result.is_ok());
+        let (binary, rest) = result.unwrap();
+
+        assert_eq!(binary.left_operand, Type::Number(5));
+        assert_eq!(binary.operator, Operator::Add);
+        assert_eq!(binary.right_operand, Type::Number(3));
+        assert_eq!(rest, "");
+    }
+
+    #[test]
+    fn test_binary_new_with_whitespace() {
+        let input = "  8   *   4  ";
+        let result = Binary::new(input);
+        assert!(result.is_ok());
+        let (binary, rest) = result.unwrap();
+        assert_eq!(binary.left_operand, Type::Number(8));
+        assert_eq!(binary.operator, Operator::Mul);
+        assert_eq!(binary.right_operand, Type::Number(4));
+        assert_eq!(rest, "");
+    }
+
+    #[test]
+    fn test_binary_new_invalid_operator() {
+        let input = "10 ? 2";
+        let result = Binary::new(input);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Illegal Operator: ?");
+    }
+
+    #[test]
+    fn test_binary_new_missing_right_operand() {
+        let input = "7 +";
+        let result = Binary::new(input);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Unexpected token: ");
+    }
+
+    #[test]
+    fn test_binary_new_invalid_left_operand() {
+        let input = "foo + 10";
+        let (result, rest) = Binary::new(input).unwrap();
+        assert_eq!(result.left_operand, Type::Identifier("foo".to_string()));
+        assert_eq!(result.operator, Operator::Add);
+        assert_eq!(result.right_operand, Type::Number(10));
+        assert_eq!(rest, "");
     }
 }
