@@ -12,12 +12,14 @@ pub enum Keyword {
     Let,
     Return,
     Print,
+    Func,
 }
 
 impl Keyword {
     pub fn new(s: &str) -> Result<(Self, &str), String> {
         let (keyword, rest) = extract_next_ident(s.trim());
         let keyword = match keyword {
+            "func" => Self::Func,
             "main" => Self::Main,
             "if" => Self::If,
             "else" => Self::Else,
