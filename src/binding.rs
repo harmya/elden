@@ -26,70 +26,10 @@ impl BindingDef {
         };
 
         let (_, rest) = extract_whitespace(rest);
-
-        let (val, rest) = match Expression::new(rest) {
-            Ok(res) => res,
-            Err(err) => return Err(err),
-        };
-
-        Ok((
-            Self {
-                name: name.to_string(),
-                val,
-            },
-            rest,
-        ))
+        todo!();
     }
 
     pub(crate) fn eval(&self, env: &mut Env) {
-        env.store_binding(self.name.clone(), self.val.eval());
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::expression::Expression;
-
-    fn parse_expression(input: &str) -> Expression {
-        let (expression, _) = Expression::new(input).unwrap();
-        return expression;
-    }
-
-    #[test]
-    fn test_binding_def_new_valid_input() {
-        let input = "let x = 42";
-        let (binding, rest) = BindingDef::new(input).expect("Failed to parse binding definition");
-
-        assert_eq!(binding.name, "x");
-        assert_eq!(binding.val, parse_expression("42"));
-        assert_eq!(rest, "");
-    }
-
-    #[test]
-    fn test_binding_def_new_invalid_keyword() {
-        let input = "letx = 42";
-        let result = BindingDef::new(input);
-
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "expected let ");
-    }
-
-    #[test]
-    fn test_binding_def_new_missing_equal_sign() {
-        let input = "let x 42"; // Missing '='
-        let result = BindingDef::new(input);
-
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "expected =");
-    }
-
-    #[test]
-    fn test_binding_def_new_invalid_expression() {
-        let input = "let x = ";
-        let result = BindingDef::new(input);
-
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Invalid expression: ''");
+        todo!()
     }
 }

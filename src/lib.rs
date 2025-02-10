@@ -23,7 +23,7 @@ pub fn run_lexer(input: &str) -> Result<(Vec<Token>, &str), String> {
                     Ok(result) => result,
                     Err(err) => return Err(err),
                 };
-                tokens.push(Token::Literal(types::Type::String(value.to_string())));
+                tokens.push(Token::Type(types::Type::String(value.to_string())));
 
                 remaining = rest.trim();
             }

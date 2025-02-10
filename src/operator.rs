@@ -47,6 +47,26 @@ impl Operator {
         Ok((op, rest))
     }
 
+    fn get_precedence(operator: Self) -> usize {
+        let precedence = match operator {
+            Operator::Or => 1,
+            Operator::And => 2,
+            Operator::EqualEqual | Operator::BangEquals => 3,
+            Operator::Greater | Operator::GreaterEqual | Operator::Less | Operator::LessEqual => 4,
+            Operator::Add | Operator::Sub => 5,
+            Operator::Mul | Operator::Div | Operator::Mod => 6,
+            Operator::Not => 7,
+            Operator::Equal => 8,
+        };
+
+        return precedence;
+    }
+
+    pub fn is_higher(op1: Operator, op2: Operator) -> bool {
+        //returns true if op1 has higher precendece, false if equal or lower
+        return Self::get_precedence(op1) > Self::get_precedence(op2);
+    }
+
     pub fn tag(s: &str) -> bool {
         matches!(
             s,

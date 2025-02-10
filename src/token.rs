@@ -4,7 +4,7 @@ use crate::{delimeter::Delimiter, keyword::Keyword, operator::Operator, types::T
 pub enum Token {
     Delimiter(Delimiter),
     Operator(Operator),
-    Literal(Type),
+    Type(Type),
     Keyword(Keyword),
 }
 
@@ -17,7 +17,7 @@ impl Token {
         }
 
         if let Ok((literal, rest)) = Type::new(remaining) {
-            return Ok((Token::Literal(literal), rest));
+            return Ok((Token::Type(literal), rest));
         }
 
         if let Ok((operator, rest)) = Operator::new(remaining) {
