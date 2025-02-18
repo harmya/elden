@@ -1,7 +1,6 @@
 use token::Token;
 
 mod env;
-mod utils;
 
 pub mod binding;
 pub mod expression;
