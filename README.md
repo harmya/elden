@@ -89,7 +89,8 @@ enum Expression {
 }
 ```
 
-Now, we use normal precedence to organize the structure of this program. Parse each function.
+Now, we use normal precedence to organize the structure of this program. Take each token at a time, and recursively call it on the rest of the tokens based on conditions for the token. Example flow: Consider if the current token is "let", then the next token has to be an identifier (otherwise throw an error), which should be followed an "Equal" operator, then there should an expression. I will probably spend a few annoying minutes later to formally write the down the grammer, but you get the idea.
+
 So for a given program like this:
 ```rust
 func check(x, y) {
@@ -105,8 +106,10 @@ func main() {
     return check(x, y);
 }
 ```
-```
+
 The AST is:
+
+```
 Function: Identifier("check")
 ├── Parameters:
 │   ├── Identifier("x")
@@ -157,10 +160,3 @@ Function: Main
 │   │   │   │   │   ├── Identifier("x")
 │   │   │   │   │   ├── Identifier("y")
 ```
-
-
-
-
-
-
-
