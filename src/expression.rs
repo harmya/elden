@@ -1,7 +1,10 @@
-use crate::token::Token;
+use crate::token::{self, Token};
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {
+    ArrayDec {
+        arr_expr: Vec<Token>,
+    },
     FunctionCall {
         identifier: Token,
         args: Vec<Token>,
@@ -18,7 +21,22 @@ pub enum Expression {
     },
     Grouping(Box<Expression>),
 }
+fn parse_array_dec(tokens: &[Token]) -> Result<(Expression, usize), String> {
+    // since first token is a left square bracket
+    let mut index = 1;
+    let mut args = Vec::new();
 
+    while index < tokens.len() {
+        if tokens.get(index) == Some(&Token::SemiColon) {
+            return Err("Expected ']' in the array declaration".to_string());
+        } else if tokens.get(index) != Some(&Token::Comma) {
+            args.push(tokens[index].clone());
+        }
+        index += 1;
+    }
+
+    Ok((Expression::ArrayDec { arr_expr: args }, index))
+}
 fn parse_function_call(tokens: &[Token]) -> Result<(Expression, usize), String> {
     // We know the first token is an identifier.
     let identifier = tokens[0].clone();
@@ -39,7 +57,6 @@ fn parse_function_call(tokens: &[Token]) -> Result<(Expression, usize), String> 
         if consumed >= tokens.len() {
             return Err("Expected ')' in function call".to_string());
         }
-
         args.push(tokens[consumed].clone());
         consumed += 1;
         if consumed >= tokens.len() {
@@ -67,6 +84,7 @@ fn parse_primary(tokens: &[Token]) -> Result<(Expression, usize), String> {
         return Err("Unexpected end of input while parsing logical AND expression.".to_string());
     }
     match tokens.get(0) {
+        //parse if there is a function call
         Some(Token::Identifier(_)) => {
             if tokens.len() > 1 && tokens[1] == Token::LeftParen {
                 parse_function_call(tokens)
@@ -74,6 +92,7 @@ fn parse_primary(tokens: &[Token]) -> Result<(Expression, usize), String> {
                 Ok((Expression::Token(tokens[0].clone()), 1))
             }
         }
+        Some(Token::LeftSquare) => parse_array_dec(tokens),
         Some(Token::Number(_)) | Some(Token::StringLiteral(_)) => {
             Ok((Expression::Token(tokens[0].clone()), 1))
         }

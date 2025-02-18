@@ -6,11 +6,37 @@ pub enum Statement {
         identifier: Token,
         value: Expression,
     },
-    IfStatement,
-    WhileStatement,
+    IfStatement {
+        cond: Expression,
+        if_then: Vec<Statement>,
+        else_then: Option<Vec<Statement>>,
+    },
+    WhileStatement {
+        cond: Expression,
+        loop_stmt: Vec<Statement>,
+    },
     ReturnStatement {
         value: Expression,
     },
+}
+
+pub fn get_statement_slice(
+    tokens: &[Token],
+    curr_index: usize,
+) -> Result<(&[Token], usize), String> {
+    // Collect tokens until a semicolon is found
+
+    let mut index = curr_index;
+    while index < tokens.len() && tokens[index] != Token::SemiColon {
+        index += 1;
+    }
+    // If we've reached the end without finding a semicolon, it's a syntax error
+    if index >= tokens.len() {
+        return Err("Syntax error, expected semicolon at end of statement in function body".into());
+    }
+    // Slice containing tokens for the current statement
+    let statement_tokens = &tokens[..index];
+    Ok((statement_tokens, index))
 }
 
 impl Statement {
@@ -21,21 +47,27 @@ impl Statement {
 
         match tokens[0] {
             Token::Let => {
-                if tokens.len() >= 4 {
-                    let identifier = match &tokens[1] {
-                        Token::Identifier(_) => tokens[1].clone(),
+                //now, since the first token is a let, we get a slice until the next semi colon
+                let (token_slice, consumed) = match get_statement_slice(tokens, 0) {
+                    Ok(output) => output,
+                    Err(e) => return Err(e),
+                };
+
+                if token_slice.len() >= 4 {
+                    let identifier = match &token_slice[1] {
+                        Token::Identifier(_) => token_slice[1].clone(),
                         _ => {
                             return Err("Assignment statement must start with an identifier".into())
                         }
                     };
 
-                    if tokens[2] != Token::Equal {
+                    if token_slice[2] != Token::Equal {
                         return Err(
                             "Expected '=' after the identifier in assignment statement".into()
                         );
                     }
 
-                    let expr = match Expression::new(&tokens[3..]) {
+                    let expr = match Expression::new(&token_slice[3..]) {
                         Ok(expression) => expression,
                         Err(err) => return Err(err),
                     };
@@ -45,18 +77,27 @@ impl Statement {
                             identifier,
                             value: expr.0,
                         },
-                        expr.1,
+                        consumed,
                     ));
                 } else {
                     return Err("Syntax error, expected an assignment statement ".into());
                 }
             }
             Token::Return => {
-                let expr = match Expression::new(&tokens[1..]) {
+                //now, since the first token is a return, we get a slice until the next semi colon
+                let (token_slice, consumed) = match get_statement_slice(&tokens, 0) {
+                    Ok(output) => output,
+                    Err(e) => return Err(e),
+                };
+
+                let expr = match Expression::new(&token_slice[1..]) {
                     Ok(expression) => expression,
                     Err(err) => return Err(err),
                 };
-                return Ok((Statement::ReturnStatement { value: expr.0 }, expr.1));
+                return Ok((Statement::ReturnStatement { value: expr.0 }, consumed));
+            }
+            Token::If => {
+                todo!()
             }
             _ => return Err("Expected a statement".into()),
         }

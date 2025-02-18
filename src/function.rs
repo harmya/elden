@@ -1,5 +1,5 @@
 use crate::expression::Expression;
-use crate::statement::Statement;
+use crate::statement::{self, get_statement_slice, Statement};
 use crate::token::Token;
 
 #[derive(Debug)]
@@ -45,6 +45,9 @@ fn print_expression(expr: &Expression, indent: usize) {
                 println!("{}│   │   ├── {:?}", prefix, arg);
             }
         }
+        Expression::ArrayDec { arr_expr } => {
+            println!("{}│   ├── Value: {:?}", prefix, arr_expr);
+        }
     }
 }
 
@@ -62,6 +65,7 @@ fn print_statement(stmt: &Statement, indent: usize) {
             println!("{}│   ├── Value:", prefix);
             print_expression(value, indent + 2);
         }
+
         _ => todo!(),
     }
 }
@@ -168,28 +172,16 @@ impl Function {
 
         // --- Parse the function body ---
         while curr_index < tokens.len() && tokens[curr_index] != Token::RightBrace {
-            // Collect tokens until a semicolon is found
-            let start_index = curr_index;
-            while curr_index < tokens.len() && tokens[curr_index] != Token::SemiColon {
-                curr_index += 1;
-            }
-
-            // If we've reached the end without finding a semicolon, it's a syntax error
-            if curr_index >= tokens.len() {
-                return Err(
-                    "Syntax error, expected semicolon at end of statement in function body".into(),
-                );
-            }
-
-            // Slice containing tokens for the current statement
-            let statement_tokens = &tokens[start_index..curr_index];
-
             // Convert the tokens into a Statement
-            let statement = Statement::new(statement_tokens)?;
-            new_function.body.push(statement.0);
+            let (statement, consumed) = match Statement::new(&tokens[curr_index..]) {
+                Ok(output) => output,
+                Err(err) => return Err(err),
+            };
+
+            new_function.body.push(statement);
 
             // Consume the semicolon
-            curr_index += 1;
+            curr_index += consumed + 1;
         }
 
         // After parsing the body, we expect a closing brace

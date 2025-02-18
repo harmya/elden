@@ -8,6 +8,8 @@ pub enum Token {
     RightBrace,
     SemiColon,
     DoubleQuote,
+    LeftSquare,
+    RightSquare,
     // Operators
     Add,
     Sub,
@@ -58,6 +60,8 @@ impl Token {
             ')' => return Ok((Token::RightParen, &input[1..])),
             '{' => return Ok((Token::LeftBrace, &input[1..])),
             '}' => return Ok((Token::RightBrace, &input[1..])),
+            '[' => return Ok((Token::LeftSquare, &input[1..])),
+            ']' => return Ok((Token::RightSquare, &input[1..])),
             ';' => return Ok((Token::SemiColon, &input[1..])),
             ',' => return Ok((Token::Comma, &input[1..])),
             '"' => {
