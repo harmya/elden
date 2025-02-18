@@ -16,8 +16,20 @@ fn main() {
 fn run_program(program_file: &str) {
     let contents =
         fs::read_to_string(program_file).expect("Should have been able to read the file");
-    let (tokens, _) = run_lexer(&contents).unwrap();
-    println!("{:?}", tokens);
-    let program = get_program(&tokens);
-    print_ast(&program.unwrap());
+    let tokens = match run_lexer(&contents) {
+        Ok(output) => output.0,
+        Err(err) => {
+            println!("{}", err);
+            return;
+        }
+    };
+    println!("Tokens: {:?}", tokens);
+    let program = match get_program(&tokens) {
+        Ok(output) => output,
+        Err(err) => {
+            println!("{}", err);
+            return;
+        }
+    };
+    print_ast(&program);
 }
