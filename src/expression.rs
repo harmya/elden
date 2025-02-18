@@ -301,7 +301,6 @@ fn parse_logical_or(tokens: &[Token]) -> Result<(Expression, usize), String> {
     if tokens.is_empty() {
         return Err("Unexpected end of input while parsing logical OR expression.".to_string());
     }
-    println!("tokens in Expr {:?} \n", tokens);
 
     let (mut left, mut consumed) = match parse_logical_and(tokens) {
         Ok((expr, consumed)) => (expr, consumed),

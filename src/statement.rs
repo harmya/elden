@@ -42,7 +42,7 @@ impl Statement {
 
                     return Ok((
                         Statement::AssignStatement {
-                            identifier: identifier,
+                            identifier,
                             value: expr.0,
                         },
                         expr.1,

@@ -95,8 +95,6 @@ impl Function {
             return Err("Expected a function starting with the 'func' token".into());
         }
 
-        println!("BUH{:?}", tokens[start + 1]);
-
         let mut new_function: Function = Function {
             name: Token::Identifier("".to_string()),
             params: vec![],

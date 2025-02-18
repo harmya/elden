@@ -17,6 +17,7 @@ fn run_program(program_file: &str) {
     let contents =
         fs::read_to_string(program_file).expect("Should have been able to read the file");
     let (tokens, _) = run_lexer(&contents).unwrap();
+    println!("{:?}", tokens);
     let program = get_program(&tokens);
     print_ast(&program.unwrap());
 }
