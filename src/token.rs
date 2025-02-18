@@ -1,6 +1,7 @@
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum Token {
     // Delimiters
+    Comma,
     LeftParen,
     RightParen,
     LeftBrace,
@@ -58,6 +59,7 @@ impl Token {
             '{' => return Ok((Token::LeftBrace, &input[1..])),
             '}' => return Ok((Token::RightBrace, &input[1..])),
             ';' => return Ok((Token::SemiColon, &input[1..])),
+            ',' => return Ok((Token::Comma, &input[1..])),
             '"' => {
                 if let Some(end) = input[1..].find('"') {
                     let literal = &input[1..1 + end];

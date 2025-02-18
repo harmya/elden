@@ -1,10 +1,12 @@
+use function::Function;
 use token::Token;
-
-mod env;
-
 pub mod binding;
+mod env;
 pub mod expression;
+mod function;
+pub mod statement;
 pub mod token;
+mod utils;
 
 pub fn run_lexer(input: &str) -> Result<(Vec<Token>, usize), String> {
     let mut remaining = input.trim();
@@ -27,5 +29,10 @@ pub fn run_lexer(input: &str) -> Result<(Vec<Token>, usize), String> {
         curr_index += 1;
     }
 
+    let func = Function::new(&tokens);
+    match func {
+        Ok(f) => println!("\n{:?} \n", f),
+        Err(e) => eprintln!("Failed to parse function: {}", e),
+    }
     Ok((tokens, main_index))
 }
