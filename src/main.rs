@@ -1,6 +1,6 @@
 use std::{env, fs};
 
-use elden::run_lexer;
+use elden::{get_program, print_ast, run_lexer};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -16,7 +16,7 @@ fn main() {
 fn run_program(program_file: &str) {
     let contents =
         fs::read_to_string(program_file).expect("Should have been able to read the file");
-    let (tokens, rest) = run_lexer(&contents).unwrap();
-    println!("Tokens: {:?}", tokens);
-    println!("Main function index: {}", rest);
+    let (tokens, _) = run_lexer(&contents).unwrap();
+    let program = get_program(&tokens);
+    print_ast(&program.unwrap());
 }

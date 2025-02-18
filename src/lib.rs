@@ -1,9 +1,11 @@
-use function::Function;
+use function::{print_function, Function};
+use program::Program;
 use token::Token;
 pub mod binding;
 mod env;
 pub mod expression;
 mod function;
+pub mod program;
 pub mod statement;
 pub mod token;
 mod utils;
@@ -29,10 +31,15 @@ pub fn run_lexer(input: &str) -> Result<(Vec<Token>, usize), String> {
         curr_index += 1;
     }
 
-    let func = Function::new(&tokens);
-    match func {
-        Ok(f) => println!("\n{:?} \n", f),
-        Err(e) => eprintln!("Failed to parse function: {}", e),
-    }
     Ok((tokens, main_index))
+}
+
+pub fn get_program(input: &Vec<Token>) -> Result<Program, String> {
+    Program::new(input)
+}
+
+pub fn print_ast(program: &Program) {
+    for function in &program.functions {
+        print_function(function);
+    }
 }

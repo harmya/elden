@@ -1,4 +1,5 @@
-use crate::statement::Statement;
+use crate::expression::Expression;
+use crate::statement::{self, Statement};
 use crate::token::Token;
 
 #[derive(Debug)]
@@ -6,6 +7,75 @@ pub struct Function {
     pub name: Token,
     pub params: Vec<Token>,
     pub body: Vec<Statement>,
+}
+
+fn print_expression(expr: &Expression, indent: usize) {
+    let prefix = "│   ".repeat(indent);
+
+    match expr {
+        Expression::Token(token) => {
+            println!("{}├── {:?}", prefix, token);
+        }
+        Expression::Binary {
+            left,
+            operator,
+            right,
+        } => {
+            println!("{}├── Operator: {:?}", prefix, operator);
+            println!("{}├── Left:", prefix);
+            print_expression(left, indent + 1);
+            println!("{}├── Right:", prefix);
+            print_expression(right, indent + 1);
+        }
+        Expression::Unary { operator, operand } => {
+            println!("{}├── Unary:", prefix);
+            println!("{}│   ├── Operator: {:?}", prefix, operator);
+            println!("{}│   ├── Operand:", prefix);
+            print_expression(operand, indent + 2);
+        }
+        Expression::Grouping(inner) => {
+            println!("{}├── Grouping:", prefix);
+            print_expression(inner, indent + 1);
+        }
+        Expression::FunctionCall { identifier, args } => {
+            println!("{}├── Function Call:", prefix);
+            println!("{}│   ├── Identifier: {:?}", prefix, identifier);
+            println!("{}│   ├── Arguments:", prefix);
+            for arg in args {
+                println!("{}│   │   ├── {:?}", prefix, arg);
+            }
+        }
+    }
+}
+
+fn print_statement(stmt: &Statement, indent: usize) {
+    let prefix = "│   ".repeat(indent);
+
+    match stmt {
+        Statement::AssignStatement { identifier, value } => {
+            println!("{}├── AssignStatement: {:?}", prefix, identifier);
+            println!("{}│   ├── Value:", prefix);
+            print_expression(value, indent + 2);
+        }
+        Statement::ReturnStatement { value } => {
+            println!("{}├── ReturnStatement", prefix);
+            println!("{}│   ├── Value:", prefix);
+            print_expression(value, indent + 2);
+        }
+        _ => todo!(),
+    }
+}
+
+pub fn print_function(func: &Function) {
+    println!("Function: {:?}", func.name);
+    println!("├── Parameters:");
+    for param in &func.params {
+        println!("│   ├── {:?}", param);
+    }
+    println!("└── Body:");
+    for stmt in &func.body {
+        print_statement(stmt, 1);
+    }
 }
 
 impl Function {
@@ -20,10 +90,12 @@ impl Function {
     // - A vector of statements, each ending with a semicolon
     // - A right brace
 
-    pub fn new(tokens: &Vec<Token>) -> Result<(Self, usize), String> {
-        if tokens.is_empty() || tokens[0] != Token::Func {
+    pub fn new(tokens: &Vec<Token>, start: usize) -> Result<(Self, usize), String> {
+        if tokens.is_empty() || start >= tokens.len() || tokens[start] != Token::Func {
             return Err("Expected a function starting with the 'func' token".into());
         }
+
+        println!("BUH{:?}", tokens[start + 1]);
 
         let mut new_function: Function = Function {
             name: Token::Identifier("".to_string()),
@@ -32,9 +104,11 @@ impl Function {
         };
 
         // Expect the function name to be an identifier
-        if tokens.len() > 2 {
-            if let Token::Identifier(_) = tokens[1] {
-                new_function.name = tokens[1].clone();
+        if tokens.len() > start + 2 {
+            if let Token::Identifier(_) = tokens[start + 1] {
+                new_function.name = tokens[start + 1].clone();
+            } else if let Token::Main = tokens[start + 1] {
+                new_function.name = tokens[start + 1].clone();
             } else {
                 return Err("Syntax error, expected an identifier for the function".into());
             }
@@ -43,11 +117,11 @@ impl Function {
         }
 
         // Expect a left parenthesis after the function name
-        if tokens.len() > 3 && tokens[2] != Token::LeftParen {
+        if tokens.len() > start + 3 && tokens[start + 2] != Token::LeftParen {
             return Err("Syntax error, expected a left parenthesis".into());
         }
 
-        let mut curr_index = 2;
+        let mut curr_index = start + 2;
         let mut found_right_paren = false;
 
         // Parse the parameters
@@ -118,16 +192,14 @@ impl Function {
 
             // Consume the semicolon
             curr_index += 1;
-
-            break;
         }
 
-        // // After parsing the body, we expect a closing brace
-        // if curr_index >= tokens.len() || tokens[curr_index] != Token::RightBrace {
-        //     return Err("Syntax error, expected a closing brace at end of function body".into());
-        // }
-        // // Consume the right brace.
-        // curr_index += 1;
+        // After parsing the body, we expect a closing brace
+        if curr_index >= tokens.len() || tokens[curr_index] != Token::RightBrace {
+            return Err("Syntax error, expected a closing brace at end of function body".into());
+        }
+        // Consume the right brace.
+        curr_index += 1;
 
         Ok((new_function, curr_index))
     }
