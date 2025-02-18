@@ -21,9 +21,9 @@ pub enum Token { Comma, LeftParen, RightParen, LeftBrace, RightBrace, SemiColon,
 
 So for a given program like this:
 ```rust
-func check(x, y) {
+func sum_check(x, y) {
     let sum = x + y;
-    let more_than_20 = sum >= 10;
+    let more_than_20 = sum >= 20;
     let less_than_30 = sum < 30;
     return more_than_20 && less_than_30;
 }
@@ -94,9 +94,9 @@ Now, we use normal precedence to organize the structure of this program. Take ea
 
 So for a given program like this:
 ```rust
-func check(x, y) {
+func sum_check(x, y) {
     let sum = x + y;
-    let more_than_20 = sum >= 10;
+    let more_than_20 = sum >= 20;
     let less_than_30 = sum < 30;
     return more_than_20 && less_than_30;
 }
@@ -105,13 +105,12 @@ func main() {
     let x = 10;
     let y = 20;
     return check(x, y);
-}
 ```
 
 The AST is:
 
 ```
-Function: Identifier("check")
+Function: Identifier("sum_check")
 ├── Parameters:
 │   ├── Identifier("x")
 │   ├── Identifier("y")
@@ -129,7 +128,7 @@ Function: Identifier("check")
 │   │   │   ├── Left:
 │   │   │   │   ├── Identifier("sum")
 │   │   │   ├── Right:
-│   │   │   │   ├── Number(10)
+│   │   │   │   ├── Number(20)
 │   ├── AssignStatement: Identifier("less_than_30")
 │   │   ├── Value:
 │   │   │   ├── Operator: Less
