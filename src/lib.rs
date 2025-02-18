@@ -1,4 +1,4 @@
-use function::{print_function, Function};
+use function::print_function;
 use program::Program;
 use token::Token;
 pub mod binding;
@@ -8,7 +8,6 @@ mod function;
 pub mod program;
 pub mod statement;
 pub mod token;
-mod utils;
 
 pub fn run_lexer(input: &str) -> Result<(Vec<Token>, usize), String> {
     let mut remaining = input.trim();

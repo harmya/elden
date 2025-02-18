@@ -1,5 +1,5 @@
 use crate::expression::Expression;
-use crate::statement::{self, Statement};
+use crate::statement::Statement;
 use crate::token::Token;
 
 #[derive(Debug)]
