@@ -1,6 +1,6 @@
-func check(x, y) {
+func sum_check(x, y) {
     let sum = x + y;
-    let more_than_20 = sum >= 10;
+    let more_than_20 = sum >= 20;
     let less_than_30 = sum < 30;
     return more_than_20 && less_than_30;
 }
