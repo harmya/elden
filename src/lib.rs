@@ -1,39 +1,32 @@
-use delimeter::Delimiter;
 use token::Token;
 
 mod env;
 mod utils;
 
 pub mod binding;
-pub mod delimeter;
 pub mod expression;
-pub mod keyword;
-pub mod operator;
 pub mod token;
-pub mod types;
 
-pub fn run_lexer(input: &str) -> Result<(Vec<Token>, &str), String> {
+pub fn run_lexer(input: &str) -> Result<(Vec<Token>, usize), String> {
     let mut remaining = input.trim();
     let mut tokens = Vec::new();
+    let mut main_index = 0;
+    let mut curr_index = 0;
 
     while !remaining.is_empty() {
         match Token::new(remaining) {
-            Ok((token, rest)) if token == Token::Delimiter(Delimiter::DoubleQuote) => {
-                let (value, rest) = match Delimiter::process_literal(rest) {
-                    Ok(result) => result,
-                    Err(err) => return Err(err),
-                };
-                tokens.push(Token::Type(types::Type::String(value.to_string())));
-
-                remaining = rest.trim();
-            }
             Ok((token, rest)) => {
+                // If the token is `Main`, record its index.
+                if token == Token::Main {
+                    main_index = curr_index;
+                }
                 tokens.push(token);
                 remaining = rest.trim();
             }
             Err(err) => return Err(err),
         }
+        curr_index += 1;
     }
 
-    Ok((tokens, remaining))
+    Ok((tokens, main_index))
 }

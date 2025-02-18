@@ -1,17 +1,16 @@
-use crate::operator::{self, Operator};
-use crate::{types::Type, utils::extract_whitespace};
+use crate::token::Token;
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {
-    Literal(Type),
+    Literal(Token),
     Variable(String),
     Binary {
         left: Box<Expression>,
-        operator: Operator,
+        operator: Token,
         right: Box<Expression>,
     },
     Unary {
-        operator: Operator,
+        operator: Token,
         operand: Box<Expression>,
     },
     Grouping(Box<Expression>),

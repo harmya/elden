@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
-use crate::types::Type;
+use crate::{expression::Expression, token::Token};
 
 #[derive(Debug, PartialEq, Default)]
 pub(crate) struct Env {
-    bindings: HashMap<String, Type>,
+    bindings: HashMap<Token, Expression>,
 }
 
 impl Env {
-    pub(crate) fn store_binding(&mut self, name: String, val: Type) {
+    pub(crate) fn store_binding(&mut self, name: Token, val: Expression) {
         self.bindings.insert(name, val);
     }
 }
