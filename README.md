@@ -21,7 +21,7 @@ pub enum Token { Comma, LeftParen, RightParen, LeftBrace, RightBrace, SemiColon,
 
 So for a given program like this:
 ```rust
-    func check(x, y) {
+func check(x, y) {
     let sum = x + y;
     let more_than_20 = sum >= 10;
     let less_than_30 = sum < 30;
@@ -92,7 +92,7 @@ enum Expression {
 Now, we use normal precedence to organize the structure of this program. Parse each function.
 So for a given program like this:
 ```rust
-    func check(x, y) {
+func check(x, y) {
     let sum = x + y;
     let more_than_20 = sum >= 10;
     let less_than_30 = sum < 30;
