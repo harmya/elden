@@ -35,7 +35,8 @@ func main() {
 }
 ```
 
-Token stream: Func, Identifier("check"), LeftParen, Identifier("x"), Comma, Identifier("y"), RightParen, LeftBrace, Let, Identifier("sum"), Equal, Identifier("x"), Add, Identifier("y"), SemiColon, Let, Identifier("more_than_20"), Equal, Identifier("sum"), GreaterEqual, Number(10), SemiColon, Let, Identifier("less_than_30"), Equal, Identifier("sum"), Less, Number(30), SemiColon, Return, Identifier("more_than_20"), And, Identifier("less_than_30"), SemiColon, RightBrace, Func, Main, LeftParen, RightParen, LeftBrace, Let, Identifier("x"), Equal, Number(10), SemiColon, Let, Identifier("y"), Equal, Number(20), SemiColon, Return, Identifier("check"), LeftParen, Identifier("x"), Comma, Identifier("y"), RightParen, SemiColon, RightBrace
+Token stream: 
+```Func, Identifier("check"), LeftParen, Identifier("x"), Comma, Identifier("y"), RightParen, LeftBrace, Let, Identifier("sum"), Equal, Identifier("x"), Add, Identifier("y"), SemiColon, Let, Identifier("more_than_20"), Equal, Identifier("sum"), GreaterEqual, Number(10), SemiColon, Let, Identifier("less_than_30"), Equal, Identifier("sum"), Less, Number(30), SemiColon, Return, Identifier("more_than_20"), And, Identifier("less_than_30"), SemiColon, RightBrace, Func, Main, LeftParen, RightParen, LeftBrace, Let, Identifier("x"), Equal, Number(10), SemiColon, Let, Identifier("y"), Equal, Number(20), SemiColon, Return, Identifier("check"), LeftParen, Identifier("x"), Comma, Identifier("y"), RightParen, SemiColon, RightBrace```
 
 **Parser/Generate AST:**
 Each program is a vector of functions. Each function is a vector of statements. And each statements is a slight variation of using keywords and statements.
