@@ -105,7 +105,7 @@ func main() {
     return check(x, y);
 }
 ```
-
+```
 The AST is:
 Function: Identifier("check")
 ├── Parameters:
@@ -156,7 +156,7 @@ Function: Main
 │   │   │   │   ├── Arguments:
 │   │   │   │   │   ├── Identifier("x")
 │   │   │   │   │   ├── Identifier("y")
-
+```
 
 
 
