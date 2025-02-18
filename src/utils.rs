@@ -9,7 +9,7 @@ pub fn is_operator(token: Token) -> Result<bool, ParseError> {
         | Token::Mul
         | Token::Div
         | Token::Mod
-        | Token::BangEquals
+        | Token::NotEqual
         | Token::EqualEqual
         | Token::Greater
         | Token::GreaterEqual

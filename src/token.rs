@@ -14,7 +14,7 @@ pub enum Token {
     Mul,
     Div,
     Mod,
-    BangEquals,
+    NotEqual,
     EqualEqual,
     Greater,
     GreaterEqual,
@@ -77,7 +77,7 @@ impl Token {
         for op in op_candidates.iter() {
             if input.starts_with(op) {
                 let token = match *op {
-                    "!=" => Token::BangEquals,
+                    "!=" => Token::NotEqual,
                     "==" => Token::EqualEqual,
                     ">=" => Token::GreaterEqual,
                     "<=" => Token::LessEqual,
@@ -223,7 +223,7 @@ mod tests {
 
     #[test]
     fn test_bang_equals_operator() {
-        assert_eq!(Token::new("!="), Ok((Token::BangEquals, "")));
+        assert_eq!(Token::new("!="), Ok((Token::NotEqual, "")));
     }
 
     #[test]
