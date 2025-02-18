@@ -21,9 +21,9 @@ pub enum Token { Comma, LeftParen, RightParen, LeftBrace, RightBrace, SemiColon,
 
 So for a given program like this:
 ```rust
-func check(x, y) {
+func sum_check(x, y) {
     let sum = x + y;
-    let more_than_20 = sum >= 10;
+    let more_than_20 = sum >= 20;
     let less_than_30 = sum < 30;
     return more_than_20 && less_than_30;
 }
@@ -35,7 +35,8 @@ func main() {
 }
 ```
 
-Token stream: Func, Identifier("check"), LeftParen, Identifier("x"), Comma, Identifier("y"), RightParen, LeftBrace, Let, Identifier("sum"), Equal, Identifier("x"), Add, Identifier("y"), SemiColon, Let, Identifier("more_than_20"), Equal, Identifier("sum"), GreaterEqual, Number(10), SemiColon, Let, Identifier("less_than_30"), Equal, Identifier("sum"), Less, Number(30), SemiColon, Return, Identifier("more_than_20"), And, Identifier("less_than_30"), SemiColon, RightBrace, Func, Main, LeftParen, RightParen, LeftBrace, Let, Identifier("x"), Equal, Number(10), SemiColon, Let, Identifier("y"), Equal, Number(20), SemiColon, Return, Identifier("check"), LeftParen, Identifier("x"), Comma, Identifier("y"), RightParen, SemiColon, RightBrace
+Token stream: 
+```Func, Identifier("check"), LeftParen, Identifier("x"), Comma, Identifier("y"), RightParen, LeftBrace, Let, Identifier("sum"), Equal, Identifier("x"), Add, Identifier("y"), SemiColon, Let, Identifier("more_than_20"), Equal, Identifier("sum"), GreaterEqual, Number(10), SemiColon, Let, Identifier("less_than_30"), Equal, Identifier("sum"), Less, Number(30), SemiColon, Return, Identifier("more_than_20"), And, Identifier("less_than_30"), SemiColon, RightBrace, Func, Main, LeftParen, RightParen, LeftBrace, Let, Identifier("x"), Equal, Number(10), SemiColon, Let, Identifier("y"), Equal, Number(20), SemiColon, Return, Identifier("check"), LeftParen, Identifier("x"), Comma, Identifier("y"), RightParen, SemiColon, RightBrace```
 
 **Parser/Generate AST:**
 Each program is a vector of functions. Each function is a vector of statements. And each statements is a slight variation of using keywords and statements.
@@ -89,12 +90,13 @@ enum Expression {
 }
 ```
 
-Now, we use normal precedence to organize the structure of this program. Parse each function.
+Now, we use normal precedence to organize the structure of this program. Take each token at a time, and recursively call it on the rest of the tokens based on conditions for the token. Example flow: Consider if the current token is "let", then the next token has to be an identifier (otherwise throw an error), which should be followed an "Equal" operator, then there should an expression. I will probably spend a few annoying minutes later to formally write the down the grammer, but you get the idea.
+
 So for a given program like this:
 ```rust
-func check(x, y) {
+func sum_check(x, y) {
     let sum = x + y;
-    let more_than_20 = sum >= 10;
+    let more_than_20 = sum >= 20;
     let less_than_30 = sum < 30;
     return more_than_20 && less_than_30;
 }
@@ -105,9 +107,11 @@ func main() {
     return check(x, y);
 }
 ```
-```
+
 The AST is:
-Function: Identifier("check")
+
+```
+Function: Identifier("sum_check")
 ├── Parameters:
 │   ├── Identifier("x")
 │   ├── Identifier("y")
@@ -125,7 +129,7 @@ Function: Identifier("check")
 │   │   │   ├── Left:
 │   │   │   │   ├── Identifier("sum")
 │   │   │   ├── Right:
-│   │   │   │   ├── Number(10)
+│   │   │   │   ├── Number(20)
 │   ├── AssignStatement: Identifier("less_than_30")
 │   │   ├── Value:
 │   │   │   ├── Operator: Less
@@ -157,10 +161,3 @@ Function: Main
 │   │   │   │   │   ├── Identifier("x")
 │   │   │   │   │   ├── Identifier("y")
 ```
-
-
-
-
-
-
-
