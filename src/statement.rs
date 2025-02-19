@@ -160,13 +160,21 @@ impl Statement {
                     // Check for an optional 'else' block
                     let mut else_body = None;
                     if tokens.get(curr_index) == Some(&Token::Else) {
-                        curr_index += 1; // consume Else
-                        if tokens.get(curr_index) != Some(&Token::LeftBrace) {
-                            return Err("Syntax error, expected '{' after else".into());
+                        curr_index += 1; // consume 'else'
+                        if tokens.get(curr_index) == Some(&Token::If) {
+                            // This is an 'else if' so parse it as a nested if-statement
+                            let (nested_if, consumed_nested) =
+                                Statement::new(&tokens[curr_index..])?;
+                            curr_index += consumed_nested;
+                            else_body = Some(vec![nested_if]);
+                        } else if tokens.get(curr_index) == Some(&Token::LeftBrace) {
+                            // else block: parse the block
+                            let (else_stmts, else_consumed) = parse_block(&tokens[curr_index..])?;
+                            else_body = Some(else_stmts);
+                            curr_index += else_consumed;
+                        } else {
+                            return Err("Syntax error, expected '{' or 'if' after else".into());
                         }
-                        let (else_stmts, else_consumed) = parse_block(&tokens[curr_index..])?;
-                        else_body = Some(else_stmts);
-                        curr_index += else_consumed;
                     }
 
                     Ok((

@@ -6,7 +6,11 @@ func main() {
         let z = 10;
         let sum = x + y + z;
         return sum;
+    } else if (x < y) {
+        let diff = x - y;
+        return diff;
+    } else {
+        return 0;
     }
 
-    return 0;
 }
