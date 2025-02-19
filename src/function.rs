@@ -66,6 +66,26 @@ fn print_statement(stmt: &Statement, indent: usize) {
             print_expression(value, indent + 2);
         }
 
+        Statement::IfStatement {
+            cond,
+            if_then,
+            else_then,
+        } => {
+            println!("{}├── IfStatement", prefix);
+            println!("{}│   ├── Condition:", prefix);
+            print_expression(cond, indent + 2);
+            println!("{}│   ├── If Then:", prefix);
+            for stmt in if_then {
+                print_statement(stmt, indent + 2);
+            }
+            if let Some(else_stmts) = else_then {
+                println!("{}│   ├── Else Then:", prefix);
+                for stmt in else_stmts {
+                    print_statement(stmt, indent + 2);
+                }
+            }
+        }
+
         _ => todo!(),
     }
 }
@@ -179,9 +199,8 @@ impl Function {
             };
 
             new_function.body.push(statement);
-
             // Consume the semicolon
-            curr_index += consumed + 1;
+            curr_index += consumed;
         }
 
         // After parsing the body, we expect a closing brace

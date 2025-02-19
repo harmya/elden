@@ -1,4 +1,9 @@
-use crate::{expression::Expression, token::Token};
+use std::ffi::c_int;
+
+use crate::{
+    expression::Expression,
+    token::{self, Token},
+};
 
 #[derive(Debug, PartialEq)]
 pub enum Statement {
@@ -25,7 +30,6 @@ pub fn get_statement_slice(
     curr_index: usize,
 ) -> Result<(&[Token], usize), String> {
     // Collect tokens until a semicolon is found
-
     let mut index = curr_index;
     while index < tokens.len() && tokens[index] != Token::SemiColon {
         index += 1;
@@ -35,8 +39,27 @@ pub fn get_statement_slice(
         return Err("Syntax error, expected semicolon at end of statement in function body".into());
     }
     // Slice containing tokens for the current statement
-    let statement_tokens = &tokens[..index];
-    Ok((statement_tokens, index))
+    let statement_tokens = &tokens[curr_index..=index];
+    Ok((statement_tokens, index + 1))
+}
+
+fn parse_block(tokens: &[Token]) -> Result<(Vec<Statement>, usize), String> {
+    // Assume the block starts with '{'
+    if tokens.is_empty() || tokens[0] != Token::LeftBrace {
+        return Err("Expected '{' to start block".into());
+    }
+    let mut statements = Vec::new();
+    let mut curr_index = 1; // Skip '{'
+    while curr_index < tokens.len() && tokens[curr_index] != Token::RightBrace {
+        let (stmt, consumed) = Statement::new(&tokens[curr_index..])?;
+        statements.push(stmt);
+        curr_index += consumed;
+    }
+    if curr_index >= tokens.len() || tokens[curr_index] != Token::RightBrace {
+        return Err("Expected '}' at end of block".into());
+    }
+    curr_index += 1; // Consume '}'
+    Ok((statements, curr_index))
 }
 
 impl Statement {
@@ -67,10 +90,7 @@ impl Statement {
                         );
                     }
 
-                    let expr = match Expression::new(&token_slice[3..]) {
-                        Ok(expression) => expression,
-                        Err(err) => return Err(err),
-                    };
+                    let expr = Expression::new(&token_slice[3..token_slice.len() - 1])?;
 
                     return Ok((
                         Statement::AssignStatement {
@@ -90,14 +110,76 @@ impl Statement {
                     Err(e) => return Err(e),
                 };
 
-                let expr = match Expression::new(&token_slice[1..]) {
-                    Ok(expression) => expression,
-                    Err(err) => return Err(err),
-                };
+                let expr = Expression::new(&token_slice[1..token_slice.len() - 1])?;
                 return Ok((Statement::ReturnStatement { value: expr.0 }, consumed));
             }
             Token::If => {
-                todo!()
+                // If, LeftParen, <condition tokens>, RightParen, LeftBrace, <if body tokens>, RightBrace,
+                // optionally Else, LeftBrace, <else body tokens>, RightBrace
+                if tokens.len() > 2 && tokens.get(1) == Some(&Token::LeftParen) {
+                    // Find the matching right parenthesis for the condition
+                    let mut paren_depth = 0;
+                    let mut right_paren_index = None;
+                    for i in 1..tokens.len() {
+                        match tokens[i] {
+                            Token::LeftParen => {
+                                paren_depth += 1;
+                            }
+                            Token::RightParen => {
+                                paren_depth -= 1;
+                                if paren_depth == 0 {
+                                    right_paren_index = Some(i);
+                                    break;
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                    let right_paren_index = match right_paren_index {
+                        Some(i) => i,
+                        None => {
+                            return Err(
+                                "Syntax error, expected closing parentheses for if statement"
+                                    .into(),
+                            )
+                        }
+                    };
+
+                    // Parse the condition from tokens[2..right_paren_index]
+                    let (cond_expr, _cond_consumed) =
+                        Expression::new(&tokens[2..right_paren_index])?;
+
+                    // After the condition, expect a left brace for the if-block
+                    if tokens.get(right_paren_index + 1) != Some(&Token::LeftBrace) {
+                        return Err("Syntax error, expected '{' after if condition".into());
+                    }
+                    // use parse_block to parse statements enclosed in {}
+                    let (if_body, body_consumed) = parse_block(&tokens[right_paren_index + 1..])?;
+                    let mut curr_index = right_paren_index + 1 + body_consumed;
+
+                    // Check for an optional 'else' block
+                    let mut else_body = None;
+                    if tokens.get(curr_index) == Some(&Token::Else) {
+                        curr_index += 1; // consume Else
+                        if tokens.get(curr_index) != Some(&Token::LeftBrace) {
+                            return Err("Syntax error, expected '{' after else".into());
+                        }
+                        let (else_stmts, else_consumed) = parse_block(&tokens[curr_index..])?;
+                        else_body = Some(else_stmts);
+                        curr_index += else_consumed;
+                    }
+
+                    Ok((
+                        Statement::IfStatement {
+                            cond: cond_expr,
+                            if_then: if_body,
+                            else_then: else_body,
+                        },
+                        curr_index,
+                    ))
+                } else {
+                    Err("Syntax error, expected opening parentheses for if statement".into())
+                }
             }
             _ => return Err("Expected a statement".into()),
         }
@@ -121,6 +203,7 @@ mod tests {
             Token::Identifier("x".to_string()),
             Token::Equal,
             Token::Number(42),
+            Token::SemiColon,
         ];
         let expected = Statement::AssignStatement {
             identifier: Token::Identifier("x".to_string()),
@@ -128,7 +211,7 @@ mod tests {
         };
 
         let result = Statement::new(&tokens);
-        assert_eq!(result, Ok((expected, 1)));
+        assert_eq!(result, Ok((expected, 5)));
     }
 
     #[test]
@@ -139,6 +222,7 @@ mod tests {
             Token::Identifier("x".to_string()),
             Token::Add, // wrong token instead of '='
             Token::Number(42),
+            Token::SemiColon,
         ];
         let result = Statement::new(&tokens);
         assert!(result.is_err());
@@ -156,6 +240,7 @@ mod tests {
             Token::Number(42), // not an identifier
             Token::Equal,
             Token::Number(42),
+            Token::SemiColon,
         ];
         let result = Statement::new(&tokens);
         assert!(result.is_err());
@@ -173,7 +258,7 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
-            "Syntax error, expected an assignment statement ".to_string()
+            "Syntax error, expected semicolon at end of statement in function body".to_string()
         );
     }
 
@@ -181,19 +266,19 @@ mod tests {
     #[test]
     fn test_return_statement_success() {
         // Tokens: return 42
-        let tokens = vec![Token::Return, Token::Number(42)];
+        let tokens = vec![Token::Return, Token::Number(42), Token::SemiColon];
         let expected = Statement::ReturnStatement {
             value: Expression::Token(Token::Number(42)),
         };
         // Expression::new for [Token::Number(42)] returns consumed count of 1.
         let result = Statement::new(&tokens);
-        assert_eq!(result, Ok((expected, 1)));
+        assert_eq!(result, Ok((expected, 3)));
     }
 
     #[test]
     fn test_return_statement_no_expression() {
         // Tokens: return  (error: missing expression after return)
-        let tokens = vec![Token::Return];
+        let tokens = vec![Token::Return, Token::SemiColon];
         let result = Statement::new(&tokens);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "Expected an expression".to_string());
@@ -216,5 +301,98 @@ mod tests {
         let result = Statement::new(&tokens);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "Expected a statement".to_string());
+    }
+    #[test]
+    fn test_if_statement_without_else() {
+        // This represents:
+        // if (x) { return 1; }
+        // Token layout:
+        // [If, LeftParen, Identifier("x"), RightParen, LeftBrace,
+        //  Return, Number(1), SemiColon, RightBrace]
+        let tokens = vec![
+            Token::If,
+            Token::LeftParen,
+            Token::Identifier("x".to_string()),
+            Token::RightParen,
+            Token::LeftBrace,
+            Token::Return,
+            Token::Number(1),
+            Token::SemiColon,
+            Token::RightBrace,
+        ];
+
+        let expected = Statement::IfStatement {
+            cond: Expression::Token(Token::Identifier("x".to_string())),
+            if_then: vec![Statement::ReturnStatement {
+                value: Expression::Token(Token::Number(1)),
+            }],
+            else_then: None,
+        };
+
+        let result = Statement::new(&tokens);
+        assert_eq!(result, Ok((expected, tokens.len())));
+    }
+
+    #[test]
+    fn test_if_statement_with_else() {
+        // This represents:
+        // if (x) { return 1; } else { return 2; }
+        // Token layout:
+        // [If, LeftParen, Identifier("x"), RightParen, LeftBrace,
+        //  Return, Number(1), SemiColon, RightBrace,
+        //  Else, LeftBrace, Return, Number(2), SemiColon, RightBrace]
+        let tokens = vec![
+            Token::If,
+            Token::LeftParen,
+            Token::Identifier("x".to_string()),
+            Token::RightParen,
+            Token::LeftBrace,
+            Token::Return,
+            Token::Number(1),
+            Token::SemiColon,
+            Token::RightBrace,
+            Token::Else,
+            Token::LeftBrace,
+            Token::Return,
+            Token::Number(2),
+            Token::SemiColon,
+            Token::RightBrace,
+        ];
+
+        let expected = Statement::IfStatement {
+            cond: Expression::Token(Token::Identifier("x".to_string())),
+            if_then: vec![Statement::ReturnStatement {
+                value: Expression::Token(Token::Number(1)),
+            }],
+            else_then: Some(vec![Statement::ReturnStatement {
+                value: Expression::Token(Token::Number(2)),
+            }]),
+        };
+
+        let result = Statement::new(&tokens);
+        assert_eq!(result, Ok((expected, tokens.len())));
+    }
+
+    #[test]
+    fn test_if_statement_missing_closing_brace() {
+        // This represents an if-statement with a missing closing brace for the if-block:
+        // if (x) { return 1;
+        let tokens = vec![
+            Token::If,
+            Token::LeftParen,
+            Token::Identifier("x".to_string()),
+            Token::RightParen,
+            Token::LeftBrace,
+            Token::Return,
+            Token::Number(1),
+            Token::SemiColon,
+            // Missing RightBrace here
+        ];
+        let result = Statement::new(&tokens);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            "Expected '}' at end of block".to_string()
+        );
     }
 }

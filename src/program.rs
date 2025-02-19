@@ -16,12 +16,7 @@ impl Program {
                     functions.push(func);
                     index += consumed;
                 }
-                Err(err) => {
-                    return Err(format!(
-                        "Error parsing function at index {}: {}",
-                        index, err
-                    ))
-                }
+                Err(err) => return Err(format!("Error parsing function - {}", err)),
             }
         }
 
