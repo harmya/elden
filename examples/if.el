@@ -1,10 +1,8 @@
 func main() {
     let x = 2;
     let y = 4;
-
     if (x > y) {
-        let z = 10;
-        let sum = x + y + z;
+        let sum = x + y;
         return sum;
     } else if (x < y) {
         let diff = x - y;
@@ -12,5 +10,4 @@ func main() {
     } else {
         return 0;
     }
-
 }

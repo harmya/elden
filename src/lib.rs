@@ -1,12 +1,11 @@
 use function::print_function;
 use program::Program;
 use token::Token;
-pub mod binding;
-mod env;
 pub mod expression;
 mod function;
 pub mod program;
 pub mod statement;
+pub mod symbol;
 pub mod token;
 
 pub fn run_lexer(input: &str) -> Result<(Vec<Token>, usize), String> {

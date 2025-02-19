@@ -60,6 +60,13 @@ fn print_statement(stmt: &Statement, indent: usize) {
             println!("{}│   ├── Value:", prefix);
             print_expression(value, indent + 2);
         }
+        Statement::DeclareStatement { identifier, value } => {
+            println!("{}├── DeclareStatement: {:?}", prefix, identifier);
+            println!("{}│   ├── Value:", prefix);
+            if let Some(expr) = value {
+                print_expression(expr, indent + 2);
+            }
+        }
         Statement::ReturnStatement { value } => {
             println!("{}├── ReturnStatement", prefix);
             println!("{}│   ├── Value:", prefix);

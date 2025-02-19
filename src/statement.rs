@@ -1,12 +1,11 @@
-use std::ffi::c_int;
-
-use crate::{
-    expression::Expression,
-    token::{self, Token},
-};
+use crate::{expression::Expression, token::Token};
 
 #[derive(Debug, PartialEq)]
 pub enum Statement {
+    DeclareStatement {
+        identifier: Token,
+        value: Option<Expression>,
+    },
     AssignStatement {
         identifier: Token,
         value: Expression,
@@ -94,9 +93,9 @@ impl Statement {
                     let expr = Expression::new(&token_slice[3..token_slice.len() - 1])?;
 
                     return Ok((
-                        Statement::AssignStatement {
+                        Statement::DeclareStatement {
                             identifier,
-                            value: expr.0,
+                            value: Some(expr.0),
                         },
                         consumed,
                     ));
@@ -288,9 +287,9 @@ mod tests {
             Token::Number(42),
             Token::SemiColon,
         ];
-        let expected = Statement::AssignStatement {
+        let expected = Statement::DeclareStatement {
             identifier: Token::Identifier("x".to_string()),
-            value: Expression::Token(Token::Number(42)),
+            value: Some(Expression::Token(Token::Number(42))),
         };
 
         let result = Statement::new(&tokens);
