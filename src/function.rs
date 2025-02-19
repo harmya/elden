@@ -86,7 +86,15 @@ fn print_statement(stmt: &Statement, indent: usize) {
             }
         }
 
-        _ => todo!(),
+        Statement::WhileStatement { cond, loop_stmt } => {
+            println!("{}├── WhileStatement", prefix);
+            println!("{}│   ├── Condition:", prefix);
+            print_expression(cond, indent + 2);
+            println!("{}│   ├── Loop Body:", prefix);
+            for stmt in loop_stmt {
+                print_statement(stmt, indent + 2);
+            }
+        }
     }
 }
 

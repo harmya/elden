@@ -70,7 +70,8 @@ impl Statement {
 
         match tokens[0] {
             Token::Let => {
-                //now, since the first token is a let, we get a slice until the next semi colon
+                // We assume the statement is of the form:
+                // let Identifier, Equal, <expression>, SemiColon
                 let (token_slice, consumed) = match get_statement_slice(tokens, 0) {
                     Ok(output) => output,
                     Err(e) => return Err(e),
@@ -101,6 +102,29 @@ impl Statement {
                     ));
                 } else {
                     return Err("Syntax error, expected an assignment statement ".into());
+                }
+            }
+            Token::Identifier(_) => {
+                // We assume the statement is of the form:
+                // Identifier, Equal, <expression>, SemiColon
+                let (token_slice, consumed) = get_statement_slice(tokens, 0)?;
+                if token_slice.len() >= 3 {
+                    let identifier = token_slice[0].clone();
+                    if token_slice[1] != Token::Equal {
+                        return Err(
+                            "Expected '=' after the identifier in assignment statement".into()
+                        );
+                    }
+                    let expr = Expression::new(&token_slice[2..token_slice.len() - 1])?;
+                    return Ok((
+                        Statement::AssignStatement {
+                            identifier,
+                            value: expr.0,
+                        },
+                        consumed,
+                    ));
+                } else {
+                    return Err("Syntax error, expected an assignment statement".into());
                 }
             }
             Token::Return => {
@@ -189,11 +213,62 @@ impl Statement {
                     Err("Syntax error, expected opening parentheses for if statement".into())
                 }
             }
-            _ => return Err("Expected a statement".into()),
+
+            Token::While => {
+                // Parse while statement:
+                // while, LeftParen, <condition tokens>, RightParen, LeftBrace, <loop body>, RightBrace
+                if tokens.len() > 2 && tokens.get(1) == Some(&Token::LeftParen) {
+                    let mut paren_depth = 0;
+                    let mut right_paren_index = None;
+                    for i in 1..tokens.len() {
+                        match tokens[i] {
+                            Token::LeftParen => paren_depth += 1,
+                            Token::RightParen => {
+                                paren_depth -= 1;
+                                if paren_depth == 0 {
+                                    right_paren_index = Some(i);
+                                    break;
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                    let right_paren_index =
+                        match right_paren_index {
+                            Some(i) => i,
+                            None => return Err(
+                                "Syntax error, expected closing parenthesis for while statement"
+                                    .into(),
+                            ),
+                        };
+
+                    // Parse condition from tokens[2..right_paren_index]
+                    let (cond_expr, _cond_consumed) =
+                        Expression::new(&tokens[2..right_paren_index])?;
+
+                    // Expect a left brace after the condition for the loop block.
+                    if tokens.get(right_paren_index + 1) != Some(&Token::LeftBrace) {
+                        return Err("Syntax error, expected '{' after while condition".into());
+                    }
+
+                    let (loop_stmts, body_consumed) =
+                        parse_block(&tokens[right_paren_index + 1..])?;
+                    let curr_index = right_paren_index + 1 + body_consumed;
+                    Ok((
+                        Statement::WhileStatement {
+                            cond: cond_expr,
+                            loop_stmt: loop_stmts,
+                        },
+                        curr_index,
+                    ))
+                } else {
+                    Err("Syntax error, expected opening parenthesis for while statement".into())
+                }
+            }
+            _ => Err("Expected a statement".into()),
         }
     }
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -305,10 +380,13 @@ mod tests {
     #[test]
     fn test_statement_invalid_start() {
         // Tokens: x (an identifier, not starting with let or return)
-        let tokens = vec![Token::Identifier("x".to_string())];
+        let tokens = vec![Token::Identifier("x".to_string()), Token::SemiColon];
         let result = Statement::new(&tokens);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Expected a statement".to_string());
+        assert_eq!(
+            result.unwrap_err(),
+            "Syntax error, expected an assignment statement".to_string()
+        );
     }
     #[test]
     fn test_if_statement_without_else() {
@@ -387,6 +465,101 @@ mod tests {
         // if (x) { return 1;
         let tokens = vec![
             Token::If,
+            Token::LeftParen,
+            Token::Identifier("x".to_string()),
+            Token::RightParen,
+            Token::LeftBrace,
+            Token::Return,
+            Token::Number(1),
+            Token::SemiColon,
+            // Missing RightBrace here
+        ];
+        let result = Statement::new(&tokens);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            "Expected '}' at end of block".to_string()
+        );
+    }
+
+    #[test]
+    fn test_while_statement_success() {
+        // while (x) { return 1; }
+        // Token layout:
+        // [While, LeftParen, Identifier("x"), RightParen, LeftBrace, Return, Number(1), SemiColon, RightBrace]
+        let tokens = vec![
+            Token::While,
+            Token::LeftParen,
+            Token::Identifier("x".to_string()),
+            Token::RightParen,
+            Token::LeftBrace,
+            Token::Return,
+            Token::Number(1),
+            Token::SemiColon,
+            Token::RightBrace,
+        ];
+
+        let expected = Statement::WhileStatement {
+            cond: Expression::Token(Token::Identifier("x".to_string())),
+            loop_stmt: vec![Statement::ReturnStatement {
+                value: Expression::Token(Token::Number(1)),
+            }],
+        };
+
+        let result = Statement::new(&tokens);
+        assert_eq!(result, Ok((expected, tokens.len())));
+    }
+
+    #[test]
+    fn test_while_statement_missing_paren() {
+        // Missing closing parenthesis: while (x { return 1; }
+        let tokens = vec![
+            Token::While,
+            Token::LeftParen,
+            Token::Identifier("x".to_string()),
+            // Missing RightParen here
+            Token::LeftBrace,
+            Token::Return,
+            Token::Number(1),
+            Token::SemiColon,
+            Token::RightBrace,
+        ];
+        let result = Statement::new(&tokens);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            "Syntax error, expected closing parenthesis for while statement".to_string()
+        );
+    }
+
+    #[test]
+    fn test_while_statement_missing_brace() {
+        // Missing left brace after condition: while (x) return 1; }
+        let tokens = vec![
+            Token::While,
+            Token::LeftParen,
+            Token::Identifier("x".to_string()),
+            Token::RightParen,
+            // Missing LeftBrace here
+            Token::Return,
+            Token::Number(1),
+            Token::SemiColon,
+            Token::RightBrace,
+        ];
+        let result = Statement::new(&tokens);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            "Syntax error, expected '{' after while condition".to_string()
+        );
+    }
+
+    #[test]
+    fn test_while_statement_missing_body_end() {
+        // While statement with missing closing brace for loop body:
+        // while (x) { return 1;
+        let tokens = vec![
+            Token::While,
             Token::LeftParen,
             Token::Identifier("x".to_string()),
             Token::RightParen,
