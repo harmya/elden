@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     // Delimiters
     Comma,
@@ -28,10 +28,11 @@ pub enum Token {
     And,
     Dot,
     // Literals
-    Number(i32),
+    Integer(i32),
+    Float(f64),
     Boolean(bool),
     Identifier(String),
-    StringLiteral(String),
+    String(String),
     // Keywords
     Func,
     Main,
@@ -71,7 +72,7 @@ impl Token {
                 if let Some(end) = input[1..].find('"') {
                     let literal = &input[1..1 + end];
                     let rest = &input[1 + end + 1..];
-                    return Ok((Token::StringLiteral(literal.to_string()), rest));
+                    return Ok((Token::String(literal.to_string()), rest));
                 } else {
                     return Err("Unterminated string literal".into());
                 }
@@ -95,6 +96,48 @@ impl Token {
                 return Ok((token, &input[op.len()..]));
             }
         }
+
+        // Number literals (both integer and float)
+        if first.is_digit(10) {
+            let mut idx = 0;
+            let mut has_decimal = false;
+
+            // Process all digits before potential decimal point
+            while idx < input.len() && input.chars().nth(idx).unwrap().is_digit(10) {
+                idx += 1;
+            }
+
+            // Check for decimal point followed by at least one digit
+            if idx < input.len() && input.chars().nth(idx).unwrap() == '.' {
+                if idx + 1 < input.len() && input.chars().nth(idx + 1).unwrap().is_digit(10) {
+                    // This is a float with digits after decimal
+                    has_decimal = true;
+                    idx += 1; // Move past the decimal point
+
+                    // Process all digits after decimal point
+                    while idx < input.len() && input.chars().nth(idx).unwrap().is_digit(10) {
+                        idx += 1;
+                    }
+                }
+            }
+
+            let number_str = &input[..idx];
+
+            if has_decimal {
+                // Parse as float
+                let number = number_str
+                    .parse::<f64>()
+                    .map_err(|e| format!("Float parse error: {}", e))?;
+                return Ok((Token::Float(number), &input[idx..]));
+            } else {
+                // Parse as integer
+                let number = number_str
+                    .parse::<i32>()
+                    .map_err(|e| format!("Integer parse error: {}", e))?;
+                return Ok((Token::Integer(number), &input[idx..]));
+            }
+        }
+
         // Single-character operators
         match first {
             '+' => return Ok((Token::Add, &input[1..])),
@@ -108,23 +151,6 @@ impl Token {
             '!' => return Ok((Token::Not, &input[1..])),
             '.' => return Ok((Token::Dot, &input[1..])),
             _ => {}
-        }
-
-        // Number literals
-        if first.is_digit(10) {
-            let mut idx = 0;
-            for c in input.chars() {
-                if c.is_digit(10) {
-                    idx += 1;
-                } else {
-                    break;
-                }
-            }
-            let number_str = &input[..idx];
-            let number = number_str
-                .parse::<i32>()
-                .map_err(|e| format!("Number parse error: {}", e))?;
-            return Ok((Token::Number(number), &input[idx..]));
         }
 
         // Identifiers and Keywords
@@ -196,7 +222,7 @@ mod tests {
     fn test_string_literal() {
         assert_eq!(
             Token::new("\"hello\""),
-            Ok((Token::StringLiteral("hello".to_string()), ""))
+            Ok((Token::String("hello".to_string()), ""))
         );
     }
 
@@ -289,7 +315,7 @@ mod tests {
     // --- Number Literal Tests ---
     #[test]
     fn test_number_literal() {
-        assert_eq!(Token::new("3432"), Ok((Token::Number(3432), "")));
+        assert_eq!(Token::new("3432"), Ok((Token::Integer(3432), "")));
     }
 
     // --- Keyword & Identifier Tests ---
@@ -362,5 +388,24 @@ mod tests {
     fn test_unknown_token() {
         let err = Token::new("@");
         assert!(err.is_err());
+    }
+    #[test]
+    fn test_float_literal() {
+        assert_eq!(Token::new("3.14"), Ok((Token::Float(3.14), "")));
+    }
+
+    #[test]
+    fn test_float_with_leading_decimal() {
+        assert_eq!(Token::new(".25"), Ok((Token::Dot, "25")));
+    }
+
+    #[test]
+    fn test_float_with_trailing_decimal() {
+        assert_eq!(Token::new("42."), Ok((Token::Integer(42), ".")));
+    }
+
+    #[test]
+    fn test_float_with_whitespace() {
+        assert_eq!(Token::new("  3.14  "), Ok((Token::Float(3.14), "  ")));
     }
 }

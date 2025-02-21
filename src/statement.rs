@@ -308,12 +308,12 @@ mod tests {
             Token::Let,
             Token::Identifier("x".to_string()),
             Token::Equal,
-            Token::Number(42),
+            Token::Integer(42),
             Token::SemiColon,
         ];
         let expected = Statement::DeclareStatement {
             identifier: Token::Identifier("x".to_string()),
-            value: Some(Expression::Token(Token::Number(42))),
+            value: Some(Expression::Token(Token::Integer(42))),
         };
 
         let result = Statement::new(&tokens);
@@ -327,7 +327,7 @@ mod tests {
             Token::Let,
             Token::Identifier("x".to_string()),
             Token::Add, // wrong token instead of '='
-            Token::Number(42),
+            Token::Integer(42),
             Token::SemiColon,
         ];
         let result = Statement::new(&tokens);
@@ -343,9 +343,9 @@ mod tests {
         //  let 42 = 42  (error: identifier expected after let)
         let tokens = vec![
             Token::Let,
-            Token::Number(42), // not an identifier
+            Token::Integer(42), // not an identifier
             Token::Equal,
-            Token::Number(42),
+            Token::Integer(42),
             Token::SemiColon,
         ];
         let result = Statement::new(&tokens);
@@ -372,9 +372,9 @@ mod tests {
     #[test]
     fn test_return_statement_success() {
         // Tokens: return 42
-        let tokens = vec![Token::Return, Token::Number(42), Token::SemiColon];
+        let tokens = vec![Token::Return, Token::Integer(42), Token::SemiColon];
         let expected = Statement::ReturnStatement {
-            value: Expression::Token(Token::Number(42)),
+            value: Expression::Token(Token::Integer(42)),
         };
         // Expression::new for [Token::Number(42)] returns consumed count of 1.
         let result = Statement::new(&tokens);
@@ -425,7 +425,7 @@ mod tests {
             Token::RightParen,
             Token::LeftBrace,
             Token::Return,
-            Token::Number(1),
+            Token::Integer(1),
             Token::SemiColon,
             Token::RightBrace,
         ];
@@ -433,7 +433,7 @@ mod tests {
         let expected = Statement::IfStatement {
             cond: Expression::Token(Token::Identifier("x".to_string())),
             if_then: vec![Statement::ReturnStatement {
-                value: Expression::Token(Token::Number(1)),
+                value: Expression::Token(Token::Integer(1)),
             }],
             else_then: None,
         };
@@ -457,13 +457,13 @@ mod tests {
             Token::RightParen,
             Token::LeftBrace,
             Token::Return,
-            Token::Number(1),
+            Token::Integer(1),
             Token::SemiColon,
             Token::RightBrace,
             Token::Else,
             Token::LeftBrace,
             Token::Return,
-            Token::Number(2),
+            Token::Integer(2),
             Token::SemiColon,
             Token::RightBrace,
         ];
@@ -471,10 +471,10 @@ mod tests {
         let expected = Statement::IfStatement {
             cond: Expression::Token(Token::Identifier("x".to_string())),
             if_then: vec![Statement::ReturnStatement {
-                value: Expression::Token(Token::Number(1)),
+                value: Expression::Token(Token::Integer(1)),
             }],
             else_then: Some(vec![Statement::ReturnStatement {
-                value: Expression::Token(Token::Number(2)),
+                value: Expression::Token(Token::Integer(2)),
             }]),
         };
 
@@ -493,7 +493,7 @@ mod tests {
             Token::RightParen,
             Token::LeftBrace,
             Token::Return,
-            Token::Number(1),
+            Token::Integer(1),
             Token::SemiColon,
             // Missing RightBrace here
         ];
@@ -517,7 +517,7 @@ mod tests {
             Token::RightParen,
             Token::LeftBrace,
             Token::Return,
-            Token::Number(1),
+            Token::Integer(1),
             Token::SemiColon,
             Token::RightBrace,
         ];
@@ -525,7 +525,7 @@ mod tests {
         let expected = Statement::WhileStatement {
             cond: Expression::Token(Token::Identifier("x".to_string())),
             loop_stmt: vec![Statement::ReturnStatement {
-                value: Expression::Token(Token::Number(1)),
+                value: Expression::Token(Token::Integer(1)),
             }],
         };
 
@@ -543,7 +543,7 @@ mod tests {
             // Missing RightParen here
             Token::LeftBrace,
             Token::Return,
-            Token::Number(1),
+            Token::Integer(1),
             Token::SemiColon,
             Token::RightBrace,
         ];
@@ -565,7 +565,7 @@ mod tests {
             Token::RightParen,
             // Missing LeftBrace here
             Token::Return,
-            Token::Number(1),
+            Token::Integer(1),
             Token::SemiColon,
             Token::RightBrace,
         ];
@@ -588,7 +588,7 @@ mod tests {
             Token::RightParen,
             Token::LeftBrace,
             Token::Return,
-            Token::Number(1),
+            Token::Integer(1),
             Token::SemiColon,
             // Missing RightBrace here
         ];

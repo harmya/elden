@@ -7,12 +7,12 @@ pub enum Expression {
     ArrayDec {
         arr_expr: Vec<Token>,
     },
-    ArrayIndex {
-        array: Token,
+    AccessIndex {
+        ident: Token,
         index: Box<Expression>,
     },
-    ArrayLen {
-        array: Token,
+    GetLength {
+        ident: Token,
     },
     ArrayAppend {
         array: Token,
@@ -54,8 +54,8 @@ fn parse_postfix(tokens: &[Token]) -> Result<(Expression, usize), String> {
                 curr_index += 1; // Skip the ']' token
 
                 Ok((
-                    Expression::ArrayIndex {
-                        array: tokens[0].clone(),
+                    Expression::AccessIndex {
+                        ident: tokens[0].clone(),
                         index: Box::new(index_expr),
                     },
                     curr_index,
@@ -72,8 +72,8 @@ fn parse_postfix(tokens: &[Token]) -> Result<(Expression, usize), String> {
                         curr_index += 1;
 
                         Ok((
-                            Expression::ArrayLen {
-                                array: tokens[0].clone(),
+                            Expression::GetLength {
+                                ident: tokens[0].clone(),
                             },
                             curr_index,
                         ))
@@ -187,7 +187,7 @@ fn parse_primary(tokens: &[Token]) -> Result<(Expression, usize), String> {
             }
         }
         Some(Token::LeftSquare) => parse_array_dec(tokens),
-        Some(Token::Number(_)) | Some(Token::StringLiteral(_)) => {
+        Some(Token::Integer(_)) | Some(Token::String(_)) => {
             Ok((Expression::Token(tokens[0].clone()), 1))
         }
         Some(Token::LeftParen) => {
@@ -476,8 +476,8 @@ impl Expression {
             } => todo!(),
             Expression::Unary { operator, operand } => todo!(),
             Expression::Grouping(expression) => todo!(),
-            Expression::ArrayIndex { array, index } => todo!(),
-            Expression::ArrayLen { array } => todo!(),
+            Expression::AccessIndex { ident, index } => todo!(),
+            Expression::GetLength { ident } => todo!(),
             Expression::ArrayAppend { array, value } => todo!(),
         }
 
@@ -500,8 +500,8 @@ mod tests {
 
     #[test]
     fn test_parse_primary_number() {
-        let tokens = vec![Token::Number(42)];
-        let expected = Expression::Token(Token::Number(42));
+        let tokens = vec![Token::Integer(42)];
+        let expected = Expression::Token(Token::Integer(42));
         assert_eq!(parse_primary(&tokens), Ok((expected, 1)));
     }
 

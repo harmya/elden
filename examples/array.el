@@ -9,6 +9,7 @@ func main() {
 
     arr.append(6 + 5 - sum);
     let len = arr.length;
+    let last = arr[len - 1];
 
     return sum;
 }

@@ -48,15 +48,15 @@ fn print_expression(expr: &Expression, indent: usize) {
         Expression::ArrayDec { arr_expr } => {
             println!("{}│   ├── Value: {:?}", prefix, arr_expr);
         }
-        Expression::ArrayIndex { array, index } => {
-            println!("{}├── Array Index:", prefix);
-            println!("{}│   ├── Array: {:?} ", prefix, array);
+        Expression::AccessIndex { ident, index } => {
+            println!("{}├── Access Index:", prefix);
+            println!("{}│   ├── Identifier: {:?} ", prefix, ident);
             println!("{}│   ├── Index:", prefix);
             print_expression(index, indent + 2);
         }
-        Expression::ArrayLen { array } => {
-            println!("{}├── Array Length:", prefix);
-            println!("{}│   ├── Array: {:?}", prefix, array);
+        Expression::GetLength { ident } => {
+            println!("{}├── Get Length:", prefix);
+            println!("{}│   ├── Identifier: {:?}", prefix, ident);
         }
         Expression::ArrayAppend { array, value } => {
             println!("{}├── Array Append:", prefix);
