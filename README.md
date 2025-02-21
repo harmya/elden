@@ -1,4 +1,4 @@
-### Writing a compiler from scratch
+### Writing a compiler from scratch (WIP)
 
 Parts of a compiler:
 
