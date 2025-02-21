@@ -6,6 +6,10 @@ pub enum Statement {
         identifier: Token,
         value: Option<Expression>,
     },
+    ArrayAppend {
+        identifier: Token,
+        value: Expression,
+    },
     AssignStatement {
         identifier: Token,
         value: Expression,
@@ -107,6 +111,23 @@ impl Statement {
                 // We assume the statement is of the form:
                 // Identifier, Equal, <expression>, SemiColon
                 let (token_slice, consumed) = get_statement_slice(tokens, 0)?;
+                let identifier = token_slice[0].clone();
+                if token_slice.len() >= 3
+                    && token_slice[1] == Token::Dot
+                    && token_slice[2] == Token::Append
+                {
+                    //there should be an expression (expr);
+
+                    let (expr, _) = Expression::new(&token_slice[4..token_slice.len() - 2])?;
+
+                    return Ok((
+                        Statement::ArrayAppend {
+                            identifier,
+                            value: expr,
+                        },
+                        consumed,
+                    ));
+                }
                 if token_slice.len() >= 3 {
                     let identifier = token_slice[0].clone();
                     if token_slice[1] != Token::Equal {
@@ -264,7 +285,10 @@ impl Statement {
                     Err("Syntax error, expected opening parenthesis for while statement".into())
                 }
             }
-            _ => Err("Expected a statement".into()),
+            _ => {
+                println!("{:?}", tokens[0]);
+                return Err("Expected a statement  ".into());
+            }
         }
     }
 }

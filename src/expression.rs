@@ -1,9 +1,22 @@
+use std::process::id;
+
 use crate::token::{self, Token};
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {
     ArrayDec {
         arr_expr: Vec<Token>,
+    },
+    ArrayIndex {
+        array: Token,
+        index: Box<Expression>,
+    },
+    ArrayLen {
+        array: Token,
+    },
+    ArrayAppend {
+        array: Token,
+        value: Box<Expression>,
     },
     FunctionCall {
         identifier: Token,
@@ -20,6 +33,83 @@ pub enum Expression {
         operand: Box<Expression>,
     },
     Grouping(Box<Expression>),
+}
+
+fn parse_postfix(tokens: &[Token]) -> Result<(Expression, usize), String> {
+    // first thing is the identifier
+    let mut curr_index = 1;
+
+    if curr_index < tokens.len() {
+        match tokens[curr_index] {
+            Token::LeftSquare => {
+                curr_index += 1; // Skip the '[' token
+
+                let (index_expr, consumed) = parse_logical_or(&tokens[curr_index..])?;
+                curr_index += consumed;
+
+                if curr_index >= tokens.len() || tokens[curr_index] != Token::RightSquare {
+                    return Err("Expected ']' after array index".into());
+                }
+
+                curr_index += 1; // Skip the ']' token
+
+                Ok((
+                    Expression::ArrayIndex {
+                        array: tokens[0].clone(),
+                        index: Box::new(index_expr),
+                    },
+                    curr_index,
+                ))
+            }
+            Token::Dot => {
+                curr_index += 1; // Skip the '.' token
+                if curr_index >= tokens.len() {
+                    return Err("Expected property or method name after '.'".into());
+                }
+
+                match &tokens[curr_index] {
+                    Token::Length => {
+                        curr_index += 1;
+
+                        Ok((
+                            Expression::ArrayLen {
+                                array: tokens[0].clone(),
+                            },
+                            curr_index,
+                        ))
+                    }
+                    Token::Append => {
+                        curr_index += 1;
+                        // Handle appending a value
+                        if curr_index >= tokens.len() || tokens[curr_index] != Token::LeftParen {
+                            return Err("Expected '(' after 'append'".into());
+                        }
+                        curr_index += 1; // skip the (
+
+                        let (value_expr, consumed) = parse_logical_or(&tokens[curr_index..])?;
+                        curr_index += consumed;
+
+                        if curr_index >= tokens.len() || tokens[curr_index] != Token::RightParen {
+                            return Err("Expected ')' after 'append'".into());
+                        }
+                        curr_index += 1; // skip the )
+
+                        Ok((
+                            Expression::ArrayAppend {
+                                array: tokens[0].clone(),
+                                value: Box::new(value_expr),
+                            },
+                            curr_index,
+                        ))
+                    }
+                    _ => return Err("Expected Length, Append, or identifier after '.'".into()),
+                }
+            }
+            _ => return Err("Expected Length, Append, or identifier after '.'".into()),
+        }
+    } else {
+        return Err("Expected end while parse".into());
+    }
 }
 fn parse_array_dec(tokens: &[Token]) -> Result<(Expression, usize), String> {
     // since first token is a left square bracket
@@ -88,6 +178,10 @@ fn parse_primary(tokens: &[Token]) -> Result<(Expression, usize), String> {
         Some(Token::Identifier(_)) => {
             if tokens.len() > 1 && tokens[1] == Token::LeftParen {
                 parse_function_call(tokens)
+            } else if tokens.len() > 1
+                && (tokens[1] == Token::Dot || tokens[1] == Token::LeftSquare)
+            {
+                parse_postfix(tokens)
             } else {
                 Ok((Expression::Token(tokens[0].clone()), 1))
             }
@@ -368,6 +462,26 @@ impl Expression {
         }
 
         Ok((expr, consumed))
+    }
+
+    pub fn resolve_symbols(&self) -> Result<bool, String> {
+        match self {
+            Expression::ArrayDec { arr_expr } => {}
+            Expression::FunctionCall { identifier, args } => todo!(),
+            Expression::Token(token) => todo!(),
+            Expression::Binary {
+                left,
+                operator,
+                right,
+            } => todo!(),
+            Expression::Unary { operator, operand } => todo!(),
+            Expression::Grouping(expression) => todo!(),
+            Expression::ArrayIndex { array, index } => todo!(),
+            Expression::ArrayLen { array } => todo!(),
+            Expression::ArrayAppend { array, value } => todo!(),
+        }
+
+        todo!()
     }
 }
 

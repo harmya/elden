@@ -26,6 +26,7 @@ pub enum Token {
     Not,
     Or,
     And,
+    Dot,
     // Literals
     Number(i32),
     Boolean(bool),
@@ -41,6 +42,8 @@ pub enum Token {
     Let,
     Return,
     Print,
+    Append,
+    Length,
 }
 
 impl Token {
@@ -103,6 +106,7 @@ impl Token {
             '<' => return Ok((Token::Less, &input[1..])),
             '=' => return Ok((Token::Equal, &input[1..])),
             '!' => return Ok((Token::Not, &input[1..])),
+            '.' => return Ok((Token::Dot, &input[1..])),
             _ => {}
         }
 
@@ -147,6 +151,8 @@ impl Token {
                 "print" => Token::Print,
                 "true" => Token::Boolean(true),
                 "false" => Token::Boolean(false),
+                "append" => Token::Append,
+                "length" => Token::Length,
                 _ => Token::Identifier(ident.to_string()),
             };
             return Ok((token, &input[idx..]));
@@ -258,6 +264,11 @@ mod tests {
     #[test]
     fn test_equal_operator() {
         assert_eq!(Token::new(" ="), Ok((Token::Equal, "")));
+    }
+
+    #[test]
+    fn test_dot_operator() {
+        assert_eq!(Token::new(" ."), Ok((Token::Dot, "")));
     }
 
     #[test]

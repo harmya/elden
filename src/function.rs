@@ -1,5 +1,5 @@
 use crate::expression::Expression;
-use crate::statement::{self, get_statement_slice, Statement};
+use crate::statement::Statement;
 use crate::token::Token;
 
 #[derive(Debug)]
@@ -47,6 +47,22 @@ fn print_expression(expr: &Expression, indent: usize) {
         }
         Expression::ArrayDec { arr_expr } => {
             println!("{}│   ├── Value: {:?}", prefix, arr_expr);
+        }
+        Expression::ArrayIndex { array, index } => {
+            println!("{}├── Array Index:", prefix);
+            println!("{}│   ├── Array: {:?} ", prefix, array);
+            println!("{}│   ├── Index:", prefix);
+            print_expression(index, indent + 2);
+        }
+        Expression::ArrayLen { array } => {
+            println!("{}├── Array Length:", prefix);
+            println!("{}│   ├── Array: {:?}", prefix, array);
+        }
+        Expression::ArrayAppend { array, value } => {
+            println!("{}├── Array Append:", prefix);
+            println!("{}│   ├── Array: {:?} ", prefix, array);
+            println!("{}│   ├── Value:", prefix);
+            print_expression(value, indent + 2);
         }
     }
 }
@@ -101,6 +117,12 @@ fn print_statement(stmt: &Statement, indent: usize) {
             for stmt in loop_stmt {
                 print_statement(stmt, indent + 2);
             }
+        }
+
+        Statement::ArrayAppend { identifier, value } => {
+            println!("{}├── ArrayAppend: {:?}", prefix, identifier);
+            println!("{}│   ├── Value:", prefix);
+            print_expression(value, indent + 2);
         }
     }
 }
