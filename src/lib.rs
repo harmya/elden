@@ -4,6 +4,7 @@ use token::Token;
 pub mod expression;
 mod function;
 pub mod program;
+pub mod semantic;
 pub mod statement;
 pub mod symbol;
 pub mod token;
