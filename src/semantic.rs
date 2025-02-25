@@ -12,7 +12,6 @@ pub struct SemanticAnalyzer {
     errors: Vec<String>,
 }
 
-// Inferred type for expressions
 pub enum InferredType {
     Integer,
     Float,
