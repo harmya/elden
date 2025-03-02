@@ -296,3 +296,5 @@ Function: Main
 │   │   ├── Value:
 │   │   │   ├── Identifier("sum")
 ```
+
+Also, Mikail if you see this, I KNOW ITS NOT FINISHED I WILL FINISH IT STOP BULLYING
